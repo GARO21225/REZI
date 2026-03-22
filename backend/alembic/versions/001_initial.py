@@ -15,7 +15,6 @@ depends_on = None
 
 def upgrade():
     # Extension PostGIS
-    op.execute('CREATE EXTENSION IF NOT EXISTS postgis')
 
     # ── Users ──
     op.create_table('users',
