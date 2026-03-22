@@ -8,7 +8,7 @@ import uuid
 
 from database import get_db
 from models.paiement import Paiement, StatutPaiement, OperateurMobile
-from models.reservation import Reservation, StatutReservation
+from models.reservation import Reservation
 from models.user import User
 from routers.auth import get_current_user
 from services.mobile_money import (
