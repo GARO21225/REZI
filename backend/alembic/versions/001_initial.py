@@ -6,7 +6,6 @@ Create Date: 2026-03-21
 """
 from alembic import op
 import sqlalchemy as sa
-from geoalchemy2 import Geometry
 
 revision = '001_initial'
 down_revision = None
