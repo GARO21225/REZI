@@ -1,0 +1,347 @@
+<!-- 
+  COMPOSANT PAIEMENT MOBILE MONEY
+  À insérer dans frontend/index.html avant </body>
+  Remplace la fonction makeReservation() existante
+-->
+
+<!-- ══ MODAL PAIEMENT ══ -->
+<div class="modal-overlay" id="modal-paiement">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closePaiement()">×</button>
+    <div id="paiement-content"></div>
+  </div>
+</div>
+
+<style>
+/* ── PAIEMENT STYLES ── */
+.operateur-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0; }
+.op-card {
+  border:2px solid var(--border); border-radius:12px; padding:14px 10px;
+  cursor:pointer; text-align:center; transition:all .2s; background:var(--surface2);
+  position:relative;
+}
+.op-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.op-card.selected { border-color:var(--accent); background:rgba(245,166,35,.08); }
+.op-card.selected::after {
+  content:'✓'; position:absolute; top:8px; right:10px;
+  width:20px; height:20px; border-radius:50%; background:var(--accent);
+  color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  line-height:20px;
+}
+.op-logo { font-size:28px; margin-bottom:6px; }
+.op-name { font-size:13px; font-weight:700; }
+.op-fee { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+/* Couleurs opérateurs */
+.op-orange { --op-color:#ff6600; }
+.op-mtn { --op-color:#ffd700; }
+.op-wave { --op-color:#00a8e0; }
+.op-moov { --op-color:#0066cc; }
+.op-card.selected.op-orange { border-color:#ff6600; background:rgba(255,102,0,.08); }
+.op-card.selected.op-mtn { border-color:#ffd700; background:rgba(255,215,0,.08); }
+.op-card.selected.op-wave { border-color:#00a8e0; background:rgba(0,168,224,.08); }
+.op-card.selected.op-moov { border-color:#0066cc; background:rgba(0,102,204,.08); }
+
+/* Steps */
+.pay-step { animation:fadeInUp .3s ease; }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* Recap */
+.pay-recap {
+  background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+  padding:16px; margin-bottom:20px;
+}
+.pay-recap-row { display:flex; justify-content:space-between; font-size:14px; padding:4px 0; color:var(--text-muted); }
+.pay-recap-row.total { color:var(--text); font-weight:700; font-size:16px; border-top:1px solid var(--border); padding-top:10px; margin-top:6px; }
+
+/* Phone input */
+.phone-wrap { display:flex; gap:8px; align-items:center; }
+.indicatif {
+  background:var(--surface2); border:1.5px solid var(--border); border-radius:10px;
+  padding:12px 14px; font-size:14px; color:var(--text); white-space:nowrap; font-weight:600;
+}
+
+/* Status steps */
+.status-anim { text-align:center; padding:20px 0; }
+.status-icon { font-size:56px; margin-bottom:12px; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.status-title { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:8px; }
+.status-msg { font-size:14px; color:var(--text-muted); line-height:1.6; }
+.status-ref { font-size:12px; color:var(--text-muted); margin-top:12px; font-family:monospace; background:var(--surface2); padding:6px 12px; border-radius:8px; display:inline-block; }
+.progress-bar { height:4px; background:var(--border); border-radius:4px; margin:20px 0; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:4px; animation:progressAnim 2s ease-out forwards; }
+@keyframes progressAnim { from{width:0} to{width:100%} }
+.check-circle {
+  width:72px; height:72px; border-radius:50%; background:rgba(62,207,142,.15);
+  border:3px solid var(--success); display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:0 auto 16px; animation:scaleIn .4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes scaleIn { from{transform:scale(0)} to{transform:scale(1)} }
+.fail-circle {
+  width:72px; height:72px; border-radius:50%; background:rgba(226,85,85,.15);
+  border:3px solid var(--danger); display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:0 auto 16px;
+}
+</style>
+
+<script>
+// ══════════════════════════════════════════════
+// PAIEMENT MOBILE MONEY
+// ══════════════════════════════════════════════
+
+let paiementState = {
+  reservationId: null,
+  prixNuit: null,
+  nbNuits: 0,
+  montant: 0,
+  operateur: null,
+  paiementId: null,
+  pollingInterval: null
+};
+
+const OPERATEURS = [
+  { id:'orange_money', nom:'Orange Money', logo:'🟠', indicatif:'+225', frais:'2%', css:'op-orange' },
+  { id:'mtn_momo', nom:'MTN MoMo', logo:'🟡', indicatif:'+225', frais:'1.5%', css:'op-mtn' },
+  { id:'wave', nom:'Wave', logo:'🔵', indicatif:'+225', frais:'1%', css:'op-wave' },
+  { id:'moov_money', nom:'Moov Money', logo:'💙', indicatif:'+225', frais:'2%', css:'op-moov' },
+];
+
+function ouvrirPaiement(reservationId, prixNuit, nbNuits) {
+  if (!state.user) { openModal('modal-auth'); return; }
+  
+  paiementState.reservationId = reservationId;
+  paiementState.prixNuit = prixNuit;
+  paiementState.nbNuits = nbNuits || 1;
+  paiementState.montant = prixNuit * (nbNuits || 1);
+  paiementState.operateur = null;
+  
+  afficherEtapChoix();
+  openModal('modal-paiement');
+}
+
+function closePaiement() {
+  clearInterval(paiementState.pollingInterval);
+  closeModal('modal-paiement');
+}
+
+function afficherEtapChoix() {
+  const fraisEstim = Math.round(paiementState.montant * 0.015);
+  document.getElementById('paiement-content').innerHTML = `
+    <div class="pay-step">
+      <h2 style="font-family:'Playfair Display',serif;font-size:24px;margin-bottom:4px">Payer avec</h2>
+      <p style="color:var(--text-muted);font-size:14px;margin-bottom:4px">Mobile Money — Côte d'Ivoire</p>
+      
+      <div class="pay-recap">
+        <div class="pay-recap-row"><span>Séjour (${paiementState.nbNuits} nuit${paiementState.nbNuits>1?'s':''})</span><span>${formatPrice(paiementState.montant)}</span></div>
+        <div class="pay-recap-row"><span>Frais de service (~)</span><span>~${formatPrice(fraisEstim)}</span></div>
+        <div class="pay-recap-row total"><span>Total estimé</span><span>${formatPrice(paiementState.montant + fraisEstim)}</span></div>
+      </div>
+
+      <p style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Choisissez votre opérateur</p>
+      <div class="operateur-grid">
+        ${OPERATEURS.map(op => `
+          <div class="op-card ${op.css}" id="op-${op.id}" onclick="selectionnerOperateur('${op.id}')">
+            <div class="op-logo">${op.logo}</div>
+            <div class="op-name">${op.nom}</div>
+            <div class="op-fee">Frais : ${op.frais}</div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div id="phone-section" style="display:none">
+        <div class="form-group">
+          <label>Numéro de téléphone</label>
+          <div class="phone-wrap">
+            <div class="indicatif" id="indicatif-display">+225</div>
+            <input type="tel" id="pay-phone" placeholder="07 00 00 00 00" style="flex:1"
+              onkeyup="if(event.key==='Enter') confirmerPaiement()"/>
+          </div>
+          <p class="form-hint" id="pay-instruction"></p>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:14px" onclick="confirmerPaiement()">
+          <i class="fas fa-lock" style="margin-right:8px"></i>Payer maintenant
+        </button>
+        <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:12px">
+          🔒 Paiement sécurisé — vos données ne sont pas stockées
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+function selectionnerOperateur(opId) {
+  paiementState.operateur = opId;
+  document.querySelectorAll('.op-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`op-${opId}`)?.classList.add('selected');
+  
+  const op = OPERATEURS.find(o => o.id === opId);
+  const frais = Math.round(paiementState.montant * (parseFloat(op.frais)/100));
+  const total = paiementState.montant + frais;
+  
+  const section = document.getElementById('phone-section');
+  section.style.display = '';
+  section.style.animation = 'fadeInUp .25s ease';
+  document.getElementById('indicatif-display').textContent = op.indicatif;
+  document.getElementById('pay-instruction').textContent =
+    `Frais ${op.nom} : ${formatPrice(frais)} — Total : ${formatPrice(total)}`;
+  document.getElementById('pay-phone').focus();
+}
+
+async function confirmerPaiement() {
+  if (!paiementState.operateur) { showToast('error','Choisissez un opérateur'); return; }
+  const phone = document.getElementById('pay-phone').value.replace(/\s/g,'');
+  if (!phone || phone.length < 8) { showToast('error','Numéro de téléphone invalide'); return; }
+  
+  afficherEtapTraitement();
+  
+  try {
+    const res = await fetch(`${API}/paiements/initier`, {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        reservation_id: paiementState.reservationId,
+        operateur: paiementState.operateur,
+        numero_telephone: '+225' + phone
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Erreur paiement');
+    
+    paiementState.paiementId = data.paiement_id;
+    afficherEtapAttente(data);
+    demarrerPolling(data.paiement_id);
+    
+  } catch(e) {
+    afficherEtapEchec(e.message);
+  }
+}
+
+function afficherEtapTraitement() {
+  document.getElementById('paiement-content').innerHTML = `
+    <div class="pay-step status-anim">
+      <div class="status-icon">⏳</div>
+      <div class="status-title">Traitement en cours...</div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="status-msg">Connexion à l'opérateur Mobile Money...</div>
+    </div>
+  `;
+}
+
+function afficherEtapAttente(data) {
+  const op = OPERATEURS.find(o => o.id === paiementState.operateur);
+  document.getElementById('paiement-content').innerHTML = `
+    <div class="pay-step status-anim">
+      <div class="status-icon">${op?.logo || '📱'}</div>
+      <div class="status-title">Validez sur votre téléphone</div>
+      <div class="status-msg">${data.instruction}</div>
+      <div class="status-ref">Réf : ${data.reference}</div>
+      <div style="margin-top:24px">
+        <div class="progress-bar"><div class="progress-fill" style="animation:progressAnim 30s linear forwards"></div></div>
+        <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px">En attente de confirmation...</p>
+      </div>
+      <button onclick="verifierManuellement()" class="btn btn-outline" style="width:100%;margin-top:16px">
+        <i class="fas fa-refresh"></i> Vérifier maintenant
+      </button>
+    </div>
+  `;
+}
+
+function afficherEtapSucces(data) {
+  clearInterval(paiementState.pollingInterval);
+  document.getElementById('paiement-content').innerHTML = `
+    <div class="pay-step">
+      <div class="check-circle">✓</div>
+      <div class="status-title" style="text-align:center;font-family:'Playfair Display',serif;font-size:24px">Paiement confirmé !</div>
+      <div class="status-msg" style="text-align:center;margin-top:8px">
+        Votre réservation est maintenant <strong style="color:var(--success)">confirmée</strong>.<br>
+        Vous recevrez une confirmation sur votre téléphone.
+      </div>
+      <div class="pay-recap" style="margin-top:20px">
+        <div class="pay-recap-row"><span>Référence</span><span style="font-family:monospace;font-size:12px">${data.reference || paiementState.paiementId}</span></div>
+        <div class="pay-recap-row total"><span>Montant payé</span><span style="color:var(--success)">${formatPrice(data.montant_total || paiementState.montant)}</span></div>
+      </div>
+      <button class="btn btn-success" style="width:100%;padding:14px" onclick="closePaiement();loadResidences()">
+        Voir mes réservations
+      </button>
+    </div>
+  `;
+  showToast('success', '🎉 Paiement confirmé !');
+}
+
+function afficherEtapEchec(message) {
+  clearInterval(paiementState.pollingInterval);
+  document.getElementById('paiement-content').innerHTML = `
+    <div class="pay-step">
+      <div class="fail-circle">✗</div>
+      <div class="status-title" style="text-align:center;font-family:'Playfair Display',serif;font-size:24px">Paiement échoué</div>
+      <div class="status-msg" style="text-align:center;margin-top:8px;color:var(--text-muted)">${message || 'Une erreur est survenue. Veuillez réessayer.'}</div>
+      <div style="display:flex;gap:10px;margin-top:24px">
+        <button class="btn btn-outline" style="flex:1;padding:12px" onclick="afficherEtapChoix()">Réessayer</button>
+        <button class="btn btn-danger" style="flex:1;padding:12px" onclick="closePaiement()">Annuler</button>
+      </div>
+    </div>
+  `;
+}
+
+function demarrerPolling(paiementId) {
+  let tentatives = 0;
+  paiementState.pollingInterval = setInterval(async () => {
+    tentatives++;
+    if (tentatives > 20) { // 2 minutes max
+      clearInterval(paiementState.pollingInterval);
+      afficherEtapEchec('Délai dépassé. Si le paiement a été effectué, il sera traité sous peu.');
+      return;
+    }
+    const result = await verifierStatut(paiementId);
+    if (result?.statut === 'confirme') afficherEtapSucces(result);
+    else if (result?.statut === 'echoue') afficherEtapEchec('Paiement refusé par l\'opérateur.');
+  }, 6000); // toutes les 6 secondes
+}
+
+async function verifierStatut(paiementId) {
+  try {
+    const res = await fetch(`${API}/paiements/verifier/${paiementId}`, {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${state.token}` }
+    });
+    return await res.json();
+  } catch { return null; }
+}
+
+async function verifierManuellement() {
+  if (!paiementState.paiementId) return;
+  const result = await verifierStatut(paiementState.paiementId);
+  if (result?.statut === 'confirme') afficherEtapSucces(result);
+  else if (result?.statut === 'echoue') afficherEtapEchec('Paiement refusé.');
+  else showToast('error', 'Paiement en attente — validez sur votre téléphone.');
+}
+
+// Remplacer la fonction makeReservation de l'index.html
+async function makeReservation(residenceId, prixNuit) {
+  if (!state.user) { openModal('modal-auth'); return; }
+  const d1 = document.getElementById('date-debut')?.value;
+  const d2 = document.getElementById('date-fin')?.value;
+  if (!d1 || !d2) { showToast('error','Veuillez sélectionner les dates.'); return; }
+  const nbNuits = Math.ceil((new Date(d2)-new Date(d1))/(1000*60*60*24));
+  if (nbNuits <= 0) { showToast('error','Dates invalides.'); return; }
+  const nbPers = parseInt(document.getElementById('nb-pers')?.value||'1');
+  
+  // Créer la réservation d'abord
+  try {
+    const res = await fetch(`${API}/reservations/`, {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${state.token}`,'Content-Type':'application/json'},
+      body: JSON.stringify({ residence_id:residenceId, date_debut:d1+'T00:00:00', date_fin:d2+'T00:00:00', nb_personnes:nbPers })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail);
+    
+    // Ouvrir le paiement
+    closeModal('modal-detail');
+    setTimeout(() => ouvrirPaiement(data.id, prixNuit, nbNuits), 200);
+    
+  } catch(e) {
+    showToast('error', e.message);
+  }
+}
+</script>
