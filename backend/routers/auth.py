@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
-import os, uuid
+import os, shutil, uuid
 
 from database import get_db
 from models.user import User
@@ -14,7 +14,7 @@ router = APIRouter()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "rezi-super-secret-key-changez-en-prod")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 jours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -30,6 +30,16 @@ def verify_password(plain: str, hashed: str) -> bool:
         return _bcrypt.checkpw(plain[:72].encode(), hashed.encode())
     except Exception:
         return False
+
+def save_file(upload, folder):
+    ext = upload.filename.split(".")[-1].lower()
+    if ext not in ["jpg","jpeg","png","pdf","webp"]:
+        raise HTTPException(400, f"Format non autorisé : {ext}")
+    filename = f"{uuid.uuid4()}.{ext}"
+    path = f"{UPLOAD_DIR}/{folder}/{filename}"
+    with open(path, "wb") as f:
+        shutil.copyfileobj(upload.file, f)
+    return f"/{path}"
 
 def create_token(data):
     payload = data.copy()
@@ -65,7 +75,6 @@ async def get_admin_user(current_user=Depends(get_current_user)):
     if current_user.role != "admin": raise HTTPException(403, "Accès admin requis")
     return current_user
 
-# ── Routes ──
 @router.post("/register")
 async def register(
     email: str = Form(...), mot_de_passe: str = Form(...),
@@ -77,7 +86,7 @@ async def register(
     if db.query(User).filter(User.email == email.lower()).first():
         raise HTTPException(400, "Un compte existe déjà avec cet email")
     if role not in ["usager","proprietaire"]: role = "usager"
-    if len(mot_de_passe) < 6: raise HTTPException(400, "Mot de passe trop court (min 6 caractères)")
+    if len(mot_de_passe) < 6: raise HTTPException(400, "Mot de passe trop court")
     user = User(
         email=email.lower().strip(), hashed_password=hash_password(mot_de_passe),
         nom=nom.strip(), prenom=prenom.strip(), telephone=telephone, role=role,
