@@ -1531,6 +1531,261 @@ body.rayon-mode #map * { cursor: crosshair !important; }
 }
 .sous-star.on { filter:none;opacity:1; }
 
+
+/* ══ BARRE NAVIGATION MOBILE BAS ══ */
+#bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 62px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 1500;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.bnav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+  position: relative;
+  padding: 6px 2px 2px;
+  border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-btn i {
+  font-size: 20px;
+  transition: all .2s;
+}
+.bnav-btn span {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+.bnav-btn.active {
+  color: var(--accent);
+}
+.bnav-btn.active i {
+  transform: translateY(-2px);
+}
+.bnav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+}
+/* Badge sur boutons nav */
+.bnav-badge {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 18px);
+  background: var(--danger);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-size: 8px;
+  font-weight: 700;
+  min-width: 14px;
+  text-align: center;
+  display: none;
+}
+.bnav-badge.show { display: block; }
+
+/* Ajuster le contenu pour la barre du bas */
+@media(max-width: 768px){
+  #bottom-nav { display: flex; }
+  body { padding-bottom: 62px; }
+  .map-stats-popup { bottom: 78px !important; }
+  #mobile-fab { bottom: 80px !important; }
+  #btn-clear-route { bottom: 144px !important; }
+  #nav-bottom-card { bottom: 72px !important; }
+  body.nav-active { padding-bottom: 0; }
+  body.nav-active #bottom-nav { display: none !important; }
+}
+
+
+/* ══ FACTURE 2 VOLETS ══ */
+.facture-bivolet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 500px;
+}
+@media(max-width: 600px){
+  .facture-bivolet { grid-template-columns: 1fr; }
+}
+
+/* Volet gauche — contrat */
+.facture-volet-contrat {
+  padding: 24px 20px;
+  border-right: 2px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+}
+@media(max-width: 600px){
+  .facture-volet-contrat { border-right: none; border-bottom: 2px dashed var(--border); padding-bottom: 20px; margin-bottom: 20px; }
+}
+
+/* Volet droit — localisation + contacts */
+.facture-volet-local {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* En-tête REZI commun */
+.facture-entete {
+  text-align: center;
+  padding-bottom: 14px;
+  border-bottom: 2.5px solid #f5a623;
+  margin-bottom: 18px;
+}
+.facture-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px;
+  font-weight: 900;
+  color: #f5a623;
+  letter-spacing: 4px;
+}
+.facture-ref {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Acte de cession */
+.facture-cession {
+  background: rgba(245,166,35,.07);
+  border: 1.5px solid rgba(245,166,35,.3);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 10px 0;
+  line-height: 1.8;
+  font-size: 13px;
+}
+.facture-cession .nom {
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 15px;
+}
+.facture-cession .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Tableau nuitées */
+.facture-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 12px 0;
+}
+.facture-table th {
+  background: rgba(245,166,35,.15);
+  color: var(--accent);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1.5px solid rgba(245,166,35,.3);
+}
+.factura-table td, .facture-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.facture-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg,rgba(245,166,35,.15),rgba(232,133,90,.1));
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+.facture-total-label { font-size: 12px; font-weight: 700; }
+.facture-total-val { font-family: 'Playfair Display',serif; font-size: 22px; font-weight: 900; color: var(--accent); }
+
+/* Carte localisation */
+.facture-map-mini {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+}
+.facture-map-mini iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Contact box */
+.facture-contact-box {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+}
+.facture-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.facture-contact-row:last-child { border-bottom: none; }
+.facture-contact-row i { width: 16px; color: var(--accent); flex-shrink: 0; }
+.facture-contact-row strong { color: var(--text); }
+
+/* Stamp */
+.facture-stamp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.facture-stamp {
+  border: 2px solid #3ecf8e;
+  color: #3ecf8e;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+
 /* Responsive */
 /* ══════════════════════════════════════
    MOBILE — Responsive complet
@@ -2038,6 +2293,33 @@ body.rayon-mode #map * { cursor: crosshair !important; }
   </div>
 </div>
 
+<!-- ══ BARRE NAVIGATION MOBILE ══ -->
+<div id="bottom-nav">
+  <button class="bnav-btn active" id="bnav-accueil" onclick="bnavSwitch('accueil')">
+    <i class="fas fa-home"></i>
+    <span>Accueil</span>
+  </button>
+  <button class="bnav-btn" id="bnav-carte" onclick="bnavSwitch('carte')">
+    <i class="fas fa-map"></i>
+    <span>Carte</span>
+  </button>
+  <button class="bnav-btn" id="bnav-recherche" onclick="bnavSwitch('recherche')">
+    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 4px 16px rgba(245,166,35,.5)">
+      <i class="fas fa-search" style="font-size:18px;color:#fff"></i>
+    </div>
+    <span style="margin-top:2px">Chercher</span>
+  </button>
+  <button class="bnav-btn" id="bnav-reservations" onclick="bnavSwitch('reservations')">
+    <i class="fas fa-calendar-check"></i>
+    <span>Réservations</span>
+    <span class="bnav-badge" id="bnav-badge-resa"></span>
+  </button>
+  <button class="bnav-btn" id="bnav-compte" onclick="bnavSwitch('compte')">
+    <i class="fas fa-user-circle"></i>
+    <span>Compte</span>
+  </button>
+</div>
+
 <!-- ══ TOAST ══ -->
 <div id="toast-container"></div>
 
@@ -2067,7 +2349,8 @@ body.rayon-mode #map * { cursor: crosshair !important; }
       </div>
       <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="votre@email.com"/></div>
       <div class="form-group"><label>Téléphone</label><input type="tel" id="reg-tel" placeholder="+225 07 00 00 00"/></div>
-      <div class="form-group"><label>Mot de passe</label><input type="password" id="reg-password" placeholder="Minimum 8 caractères"/></div>
+      <div class="form-group"><label>Mot de passe</label><input type="text" id="reg-piece" placeholder="N° Pièce d'identité (CNI, Passeport...)" style="margin-bottom:8px"/>
+            <input type="password" id="reg-password" placeholder="Minimum 8 caractères"/></div>
       <div class="form-group"><label>Rôle</label>
         <select id="reg-role"><option value="usager">👤 Usager</option><option value="proprietaire">🏠 Propriétaire</option></select>
       </div>
@@ -2337,7 +2620,7 @@ async function loadResidences(){
     const resp=await fetch(url,{signal:AbortSignal.timeout(5000)});
     if(!resp.ok)throw new Error('API indisponible');
     const data=await resp.json();
-    if(resp.ok){
+    if(data.length>0){
       state.residences=data;
       state.filtered=[...data];
       state.apiConnected=true;
@@ -3342,7 +3625,7 @@ function afficherFacture(residenceId, reservationData) {
   const r = state.residences.find(x=>x.id===residenceId);
   if(!r) return;
 
-  const u = state.user || {prenom:'Client',nom:'',email:'',telephone:''};
+  const u   = state.user || {prenom:'Client',nom:'',email:'',telephone:'',numero_piece:''};
   const ref = reservationData?.ref || genererNumeroFacture();
   const dateDebut = reservationData?.dateDebut || document.getElementById('date-debut')?.value || new Date().toISOString().split('T')[0];
   const dateFin   = reservationData?.dateFin   || document.getElementById('date-fin')?.value;
@@ -3350,85 +3633,259 @@ function afficherFacture(residenceId, reservationData) {
   const nbPers    = reservationData?.nbPers    || 1;
   const dateNow   = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 
-  const sousTotal = r.prix_par_nuit * nbNuits;
+  const prixNuit  = r.prix_par_nuit;
+  const sousTotal = prixNuit * nbNuits;
   const fraisSvc  = Math.round(sousTotal * 0.05);
   const tva       = Math.round(sousTotal * 0.18);
   const total     = sousTotal + fraisSvc + tva;
 
-  const d1 = new Date(dateDebut).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  const d2 = dateFin ? new Date(dateFin).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+  const d1 = new Date(dateDebut).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const d2 = dateFin ? new Date(dateFin).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) : '—';
+
+  // Infos propriétaire (demo ou réel)
+  const proprio = {
+    nom: r.proprietaire_nom || 'Le Propriétaire',
+    tel: r.proprietaire_tel || '+225 XX XX XX XX',
+    email: r.proprietaire_email || ''
+  };
+
+  // Lien Google Maps pour la mini-carte
+  const mapsEmbed = `https://maps.google.com/maps?q=${r.latitude},${r.longitude}&z=15&output=embed`;
+  const mapsLink  = `https://www.google.com/maps?q=${r.latitude},${r.longitude}`;
 
   const html = `
-    <div class="invoice-header">
-      <div class="invoice-logo">REZI</div>
-      <div class="invoice-subtitle">Application de réservation — Côte d'Ivoire</div>
-      <div class="invoice-ref">Facture N° <strong style="color:var(--accent)">${ref}</strong> · ${dateNow}</div>
+  <div class="facture-entete">
+    <div class="facture-logo">REZI</div>
+    <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px">
+      Contrat de location — Côte d'Ivoire
+    </div>
+    <div class="facture-ref">
+      Réf. <strong style="color:var(--accent)">${ref}</strong> · Établi le ${dateNow}
+    </div>
+  </div>
+
+  <div class="facture-bivolet">
+
+    <!-- ══ VOLET 1 — CONTRAT ══ -->
+    <div class="facture-volet-contrat">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:12px">
+        📋 Acte de location
+      </div>
+
+      <!-- Cession -->
+      <div class="facture-cession">
+        <span class="label">Le bailleur</span>
+        <div class="nom">🏠 ${proprio.nom}</div>
+        <div style="margin:8px 0;font-size:12px;color:var(--text-muted)">cède la jouissance de :</div>
+        <div style="font-weight:700;font-size:13px;color:var(--text)">${r.titre}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${r.adresse}, ${r.ville}</div>
+        <div style="margin:8px 0;font-size:12px;color:var(--text-muted)">à :</div>
+        <span class="label">Le locataire</span>
+        <div class="nom">👤 ${u.prenom} ${u.nom}</div>
+        ${u.numero_piece ? `<div style="font-size:11px;color:var(--text-muted)">Pièce N° ${u.numero_piece}</div>` : ''}
+      </div>
+
+      <!-- Tableau nuitées -->
+      <table class="facture-table">
+        <thead>
+          <tr>
+            <th>Désignation</th>
+            <th>Détail</th>
+            <th style="text-align:right">Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Arrivée</td>
+            <td colspan="2">${d1}</td>
+          </tr>
+          <tr>
+            <td>Départ</td>
+            <td colspan="2">${d2}</td>
+          </tr>
+          <tr>
+            <td>Nuitées</td>
+            <td>${nbNuits} nuit${nbNuits>1?'s':''} × ${formatPrice(prixNuit)}</td>
+            <td style="text-align:right;font-weight:700">${formatPrice(sousTotal)}</td>
+          </tr>
+          <tr>
+            <td>Frais service</td>
+            <td>5%</td>
+            <td style="text-align:right">${formatPrice(fraisSvc)}</td>
+          </tr>
+          <tr>
+            <td>TVA</td>
+            <td>18%</td>
+            <td style="text-align:right">${formatPrice(tva)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="facture-total-row">
+        <div class="facture-total-label">💰 TOTAL À PAYER</div>
+        <div class="facture-total-val">${formatPrice(total)}</div>
+      </div>
+
+      <div class="facture-stamp-row">
+        <div class="facture-stamp">✓ Confirmée</div>
+        <div style="font-size:10px;color:var(--text-muted)">Paiement Mobile Money · ${ref}</div>
+      </div>
     </div>
 
-    <div class="invoice-section">
-      <div class="invoice-section-title">Client</div>
-      <div class="invoice-row"><span>Nom</span><span>${u.prenom} ${u.nom}</span></div>
-      <div class="invoice-row"><span>Email</span><span>${u.email||'—'}</span></div>
-      <div class="invoice-row"><span>Téléphone</span><span>${u.telephone||'—'}</span></div>
-    </div>
+    <!-- ══ VOLET 2 — LOCALISATION + CONTACTS ══ -->
+    <div class="facture-volet-local">
 
-    <div class="invoice-section">
-      <div class="invoice-section-title">Hébergement</div>
-      <div class="invoice-row bold"><span>🏠 ${r.titre}</span></div>
-      <div class="invoice-row"><span>Adresse</span><span>${r.adresse}, ${r.ville}</span></div>
-      <div class="invoice-row"><span>Type</span><span>${r.type_logement}</span></div>
-      <div class="invoice-row"><span>Arrivée</span><span>${d1}</span></div>
-      <div class="invoice-row"><span>Départ</span><span>${d2}</span></div>
-      <div class="invoice-row"><span>Durée</span><span>${nbNuits} nuit${nbNuits>1?'s':''}</span></div>
-      <div class="invoice-row"><span>Personnes</span><span>${nbPers}</span></div>
-    </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:4px">
+        📍 Plan de localisation
+      </div>
 
-    <div class="invoice-section">
-      <div class="invoice-section-title">Détail du montant</div>
-      <div class="invoice-row"><span>${formatPrice(r.prix_par_nuit)} × ${nbNuits} nuit${nbNuits>1?'s':''}</span><span>${formatPrice(sousTotal)}</span></div>
-      <div class="invoice-row"><span>Frais de service (5%)</span><span>${formatPrice(fraisSvc)}</span></div>
-      <div class="invoice-row"><span>TVA (18%)</span><span>${formatPrice(tva)}</span></div>
-      <div class="invoice-row total"><span>Total</span><span>${formatPrice(total)}</span></div>
-    </div>
+      <!-- Mini carte Google Maps -->
+      <div class="facture-map-mini">
+        <iframe
+          src="${mapsEmbed}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Localisation ${r.titre}">
+        </iframe>
+      </div>
 
-    <div class="invoice-footer">
-      <div class="invoice-stamp">✓ Réservation confirmée</div>
-      <p>Paiement effectué via Mobile Money · Réf: ${ref}</p>
-      <p>REZI CI · contact@rezi.ci · +225 XX XX XX XX</p>
-      <p style="margin-top:4px;font-size:10px">Cette facture est générée automatiquement par REZI.</p>
+      <a href="${mapsLink}" target="_blank"
+        style="font-size:11px;color:var(--accent);text-align:center;display:block;margin-top:-6px">
+        <i class="fas fa-external-link-alt"></i> Ouvrir dans Google Maps
+      </a>
+
+      <!-- Contact propriétaire -->
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:8px">
+          🏠 Contact bailleur
+        </div>
+        <div class="facture-contact-box">
+          <div class="facture-contact-row">
+            <i class="fas fa-user"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Nom</div><strong>${proprio.nom}</strong></div>
+          </div>
+          <div class="facture-contact-row">
+            <i class="fas fa-phone"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Téléphone</div><strong>${proprio.tel}</strong></div>
+          </div>
+          ${proprio.email ? `<div class="facture-contact-row">
+            <i class="fas fa-envelope"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Email</div><strong>${proprio.email}</strong></div>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <!-- Contact locataire -->
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:8px">
+          👤 Contact locataire
+        </div>
+        <div class="facture-contact-box">
+          <div class="facture-contact-row">
+            <i class="fas fa-user"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Nom complet</div><strong>${u.prenom} ${u.nom}</strong></div>
+          </div>
+          <div class="facture-contact-row">
+            <i class="fas fa-phone"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Téléphone</div><strong>${u.telephone||'—'}</strong></div>
+          </div>
+          <div class="facture-contact-row">
+            <i class="fas fa-id-card"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">N° Pièce d'identité</div><strong>${u.numero_piece||'—'}</strong></div>
+          </div>
+          <div class="facture-contact-row">
+            <i class="fas fa-envelope"></i>
+            <div><div style="font-size:10px;color:var(--text-muted)">Email</div><strong>${u.email||'—'}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:auto;line-height:1.6;padding-top:10px;border-top:1px dashed var(--border)">
+        REZI CI · contact@rezi.ci<br/>
+        Ce document tient lieu de contrat de location.
+      </div>
     </div>
+  </div>
   `;
 
   document.getElementById('facture-content').innerHTML = html;
 
   // Boutons actions
-  const msg = encodeURIComponent(
-    `🏠 *Facture REZI* — ${ref}\n\n` +
-    `📋 *Hébergement :* ${r.titre}\n` +
-    `📅 *Arrivée :* ${d1}\n` +
-    `📅 *Départ :* ${d2}\n` +
-    `⏱️ *Durée :* ${nbNuits} nuit${nbNuits>1?'s':''}\n` +
-    `💰 *Total :* ${formatPrice(total)}\n\n` +
-    `✅ Réservation confirmée via REZI CI\n` +
-    `_Téléchargez votre facture dans l'application._`
+  const msgWA = encodeURIComponent(
+    `🏠 *Contrat de location REZI* — ${ref}\n\n` +
+    `*Bailleur :* ${proprio.nom}\n` +
+    `*Locataire :* ${u.prenom} ${u.nom}\n` +
+    `*Bien :* ${r.titre}\n` +
+    `*Adresse :* ${r.adresse}, ${r.ville}\n` +
+    `*Arrivée :* ${d1}\n` +
+    `*Départ :* ${d2}\n` +
+    `*Durée :* ${nbNuits} nuit${nbNuits>1?'s':''}\n` +
+    `*Montant total :* ${formatPrice(total)}\n\n` +
+    `📍 Localisation : ${mapsLink}\n\n` +
+    `✅ Contrat confirmé via REZI CI`
   );
-  const tel = u.telephone ? u.telephone.replace(/\s|\+/g,'') : '';
+  const tel = u.telephone ? u.telephone.replace(/[\s+]/g,'') : '';
   const waUrl = tel
-    ? `https://api.whatsapp.com/send?phone=${tel}&text=${msg}`
-    : `https://api.whatsapp.com/send?text=${msg}`;
+    ? `https://api.whatsapp.com/send?phone=${tel}&text=${msgWA}`
+    : `https://api.whatsapp.com/send?text=${msgWA}`;
 
   document.getElementById('facture-actions').innerHTML = `
     <button class="btn-whatsapp" onclick="window.open('${waUrl}','_blank')">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.122 1.534 5.857L0 24l6.305-1.654A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.81 9.81 0 01-5.007-1.373l-.36-.214-3.733.979 1-3.636-.235-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
-      Envoyer via WhatsApp
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.122 1.534 5.857L0 24l6.305-1.654A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.81 9.81 0 01-5.007-1.373l-.36-.214-3.733.979 1-3.636-.235-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+      Envoyer au client via WhatsApp
     </button>
-    <button class="btn-download" onclick="telechargerFacture('${ref}','${r.titre}')">
-      <i class="fas fa-download"></i> Télécharger PDF (impression)
+    <button class="btn-download" onclick="telechargerFactureBivolet('${ref}')">
+      <i class="fas fa-print"></i> Imprimer / PDF
     </button>
     <button class="btn btn-outline" style="width:100%;padding:10px;font-size:12px" onclick="closeModal('modal-facture')">Fermer</button>
   `;
 
   openModal('modal-facture');
+}
+
+
+function telechargerFactureBivolet(ref) {
+  const content = document.getElementById('facture-content').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Contrat REZI — ${ref}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'DM Sans',sans-serif;background:#fff;color:#222;padding:20px}
+      .facture-entete{text-align:center;padding-bottom:14px;border-bottom:2.5px solid #f5a623;margin-bottom:18px}
+      .facture-logo{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:#f5a623;letter-spacing:4px}
+      .facture-ref{font-size:11px;color:#888;margin-top:4px}
+      .facture-bivolet{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:400px}
+      .facture-volet-contrat{padding:20px;border-right:2px dashed #eee}
+      .facture-volet-local{padding:20px}
+      .facture-cession{background:#fff8ee;border:1.5px solid #f5a623;border-radius:10px;padding:14px;margin:10px 0;line-height:1.8;font-size:13px}
+      .facture-cession .nom{font-weight:800;color:#f5a623;font-size:15px}
+      .facture-cession .label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#888;display:block;margin-bottom:2px}
+      .facture-table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+      .facture-table th{background:#fff3d4;color:#f5a623;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:1.5px solid #f5a623}
+      .facture-table td{padding:7px 10px;border-bottom:1px solid #eee;color:#444}
+      .facture-total-row{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#fff3d4,#fff8ee);border-radius:8px;padding:10px 14px;margin-top:8px}
+      .facture-total-label{font-size:12px;font-weight:700}
+      .facture-total-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#f5a623}
+      .facture-map-mini{width:100%;height:180px;border-radius:10px;overflow:hidden;border:1.5px solid #eee;margin-bottom:8px}
+      .facture-map-mini iframe{width:100%;height:100%;border:none}
+      .facture-contact-box{background:#f9f9f9;border-radius:10px;padding:12px;font-size:12px}
+      .facture-contact-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;color:#555}
+      .facture-contact-row:last-child{border-bottom:none}
+      .facture-stamp{border:2px solid #3ecf8e;color:#3ecf8e;border-radius:8px;padding:4px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+      .facture-stamp-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:auto;padding-top:12px;border-top:1px dashed #eee}
+      @media print{
+        body{padding:10px}
+        button{display:none!important}
+      }
+    </style>
+  </head><body>${content}
+  <scr'+'ipt>setTimeout(()=>{window.print();},800);<\/scr'+'ipt>
+  </body></html>`);
+  win.document.close();
+  showToast('success','🖨️ Contrat prêt à imprimer !');
 }
 
 function telechargerFacture(ref, titre) {
@@ -4452,6 +4909,93 @@ async function soumettreAvis() {
   await renderAvisSection(avisState.residenceId);
   renderAll();
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// BARRE NAVIGATION MOBILE
+// ══════════════════════════════════════════════════════════════
+let bnavActive = 'accueil';
+
+function bnavSwitch(tab) {
+  if(window.innerWidth > 768) return;
+  bnavActive = tab;
+
+  // Mettre à jour les boutons actifs
+  document.querySelectorAll('.bnav-btn').forEach(b => {
+    b.classList.toggle('active', b.id === 'bnav-' + tab);
+  });
+
+  const sidebar   = document.getElementById('sidebar');
+  const mapCont   = document.getElementById('map-container');
+  const fab       = document.getElementById('mobile-fab');
+  const listeTb   = document.getElementById('liste-toolbar');
+  const vueListe  = document.getElementById('vue-liste');
+
+  // Réinitialiser
+  sidebar?.classList.add('collapsed');
+  if(fab) fab.style.display = 'none';
+
+  switch(tab) {
+    case 'accueil':
+      // Vue liste des résidences
+      switchToListe();
+      if(listeTb) listeTb.style.display = 'flex';
+      break;
+
+    case 'carte':
+      // Carte plein écran
+      switchToMap();
+      sidebar?.classList.add('collapsed');
+      if(fab) fab.style.display = 'none';
+      break;
+
+    case 'recherche':
+      // Ouvrir le tiroir de recherche
+      switchToMap();
+      sidebar?.classList.remove('collapsed');
+      if(fab) { fab.style.display = 'flex'; fab.innerHTML = '<i class="fas fa-xmark"></i> Fermer'; fab.classList.add('open'); }
+      // Focus sur le champ de recherche
+      setTimeout(() => document.getElementById('search-input')?.focus(), 300);
+      break;
+
+    case 'reservations':
+      // Aller sur l'historique des réservations
+      if(state.user) {
+        ouvrirDashboard('historique');
+      } else {
+        openModal('modal-auth');
+        showToast('success', '🔐 Connectez-vous pour voir vos réservations');
+      }
+      break;
+
+    case 'compte':
+      // Profil / connexion
+      if(state.user) {
+        ouvrirDashboard('profil');
+      } else {
+        openModal('modal-auth');
+      }
+      break;
+  }
+}
+
+// Mettre à jour le badge réservations
+function updateBnavBadge() {
+  const badge = document.getElementById('bnav-badge-resa');
+  if(!badge) return;
+  // Compter les réservations non lues (en_attente)
+  const count = state.reservations?.filter(r => r.statut === 'en_attente')?.length || 0;
+  badge.textContent = count;
+  badge.classList.toggle('show', count > 0);
+}
+
+// Initialiser la barre nav selon le mode
+window.addEventListener('resize', () => {
+  if(window.innerWidth > 768) {
+    // Desktop — restaurer l'interface normale
+    document.getElementById('sidebar')?.classList.remove('collapsed');
+  }
+});
 
 // ══ UTILS ══
 function showToast(type,msg){
