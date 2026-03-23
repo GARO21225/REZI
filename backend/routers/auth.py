@@ -31,7 +31,22 @@ def create_token(data):
     payload = data.copy()
     payload["exp"] = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+import shutil, uuid
 
+UPLOAD_DIR = "uploads"
+os.makedirs(f"{UPLOAD_DIR}/documents", exist_ok=True)
+os.makedirs(f"{UPLOAD_DIR}/photos", exist_ok=True)
+
+def save_file(upload, folder):
+    ext = upload.filename.split(".")[-1].lower()
+    if ext not in ["jpg","jpeg","png","pdf","webp"]:
+        raise HTTPException(400, f"Format non autorisé : {ext}")
+    filename = f"{uuid.uuid4()}.{ext}"
+    path = f"{UPLOAD_DIR}/{folder}/{filename}"
+    with open(path, "wb") as f:
+        shutil.copyfileobj(upload.file, f)
+    return f"/{path}"
+    
 def user_to_dict(user):
     return {
         "id": user.id, "email": user.email, "prenom": user.prenom,
