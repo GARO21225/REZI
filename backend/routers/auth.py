@@ -23,7 +23,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(f"{UPLOAD_DIR}/documents", exist_ok=True)
 os.makedirs(f"{UPLOAD_DIR}/photos", exist_ok=True)
 
-def hash_password(p): return pwd_context.hash(p)
+def hash_password(p): return pwd_context.hash(p[:72])
 def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
 
 def create_token(data):
