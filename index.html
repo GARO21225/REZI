@@ -3155,9 +3155,21 @@ body.rayon-mode #map * { cursor: crosshair !important; }
         Envoyer le lien
       </button>
       <div style="text-align:center;margin-top:10px">
-        <button onclick="closeModal('modal-auth');setTimeout(()=>openModal('modal-change-pwd'),200)" 
-          style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700">
-          🔑 Changer mon mot de passe →
+        <button onclick="(function(){
+  const em = document.getElementById('forgot-email')?.value?.trim();
+  closeModal('modal-auth');
+  setTimeout(()=>{
+    openModal('modal-change-pwd');
+    const pf = document.getElementById('reset-email-prefill');
+    const ef = document.getElementById('reset-email-field');
+    if(pf && em){ pf.value = em; }
+    if(ef && em){ ef.style.display = 'none'; }
+    setTimeout(()=>document.getElementById('temp-old-pwd')?.focus(), 300);
+  }, 200);
+})()" 
+          class="btn btn-primary" style="width:100%;padding:12px;margin-top:4px;font-size:13px;
+          display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="fas fa-key"></i> Changer mon mot de passe
         </button>
       </div>
     </div>
@@ -3724,82 +3736,48 @@ async function searchPOI(query){
   </div></div>`;
 
   const results = [];
-  const qLow = q.toLowerCase();
 
-  // ── SOURCE 1 : Base locale CI (instantanée) ──
-  CI_LIEUX.filter(p =>
-    p.name.toLowerCase().includes(qLow) ||
-    (p.alt && p.alt.some(a => a.toLowerCase().includes(qLow)))
-  ).slice(0,5).forEach(p => results.push({
-    source:'local', name:p.name,
-    display_name: p.desc || `${p.name}, Côte d'Ivoire`,
-    lat:String(p.lat), lon:String(p.lon),
-    type:p.type, category:'place'
-  }));
-
-  // Afficher résultats locaux immédiatement
-  if(results.length > 0) {
-    poiResults = [...results];
-    poiDropdownIdx = -1;
-    renderPoiDropdown(results, q);
-  }
-
-  // ── SOURCE 2 : Nominatim OSM ──
   try {
+    // Nominatim OSM — API officielle gratuite
     const url = `https://nominatim.openstreetmap.org/search?` +
-      `q=${encodeURIComponent(q + ' Côte d\'Ivoire')}` +
-      `&format=json&limit=8&countrycodes=ci&accept-language=fr&addressdetails=1`;
+      `q=${encodeURIComponent(q)}` +
+      `&format=json&limit=10&countrycodes=ci&accept-language=fr&addressdetails=1`;
+
     const resp = await fetch(url, {
-      headers:{'User-Agent':'REZI/1.0 (contact@rezi.ink)'},
-      signal: AbortSignal.timeout(6000)
+      headers: {'User-Agent': 'REZI/1.0 (contact@rezi.ink)'},
+      signal: AbortSignal.timeout(8000)
     });
-    if(resp.ok){
+
+    if(resp.ok) {
       const data = await resp.json();
-      const seen = new Set(results.map(r=>r.name.toLowerCase()));
-      data.forEach(item=>{
-        const name = item.display_name.split(',')[0].trim();
-        if(seen.has(name.toLowerCase())) return;
-        seen.add(name.toLowerCase());
+      data.forEach(item => {
         const addr = item.address || {};
-        const ville = addr.city||addr.town||addr.village||addr.county||'';
+        const name = item.display_name.split(',')[0].trim();
+        const ville = addr.city||addr.town||addr.village||addr.suburb||addr.county||'';
+        const pays  = addr.country || "Côte d'Ivoire";
         results.push({
-          source:'osm', name,
-          display_name: ville ? `${name}, ${ville}` : item.display_name.split(',').slice(0,2).join(','),
-          lat:item.lat, lon:item.lon,
-          type:item.type||item.class||'lieu',
-          category:item.class||'lieu'
+          source: 'osm',
+          name: name,
+          display_name: ville ? `${name}, ${ville}` : `${name}, ${pays}`,
+          lat: item.lat,
+          lon: item.lon,
+          type: item.type || item.class || 'lieu',
+          category: item.class || 'lieu'
         });
       });
     }
-  } catch(e){ console.warn('Nominatim:', e.message); }
-
-  // ── SOURCE 3 : Overpass (POI sur la carte visible) ──
-  if(results.length < 4){
-    try {
-      const b = map.getBounds();
-      const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
-      const oq = `[out:json][timeout:5];(node["name"~"${q}",i](${bbox});way["name"~"${q}",i](${bbox}););out center 5;`;
-      const resp2 = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oq)}`,
-        {signal:AbortSignal.timeout(5000)});
-      if(resp2.ok){
-        const d = await resp2.json();
-        const seen2 = new Set(results.map(r=>r.name.toLowerCase()));
-        (d.elements||[]).slice(0,4).forEach(el=>{
-          const lat=el.lat||el.center?.lat, lon=el.lon||el.center?.lon;
-          if(!lat||!lon) return;
-          const name=el.tags?.name||el.tags?.['name:fr'];
-          if(!name||seen2.has(name.toLowerCase())) return;
-          seen2.add(name.toLowerCase());
-          results.push({
-            source:'overpass', name,
-            display_name:`${name}, Abidjan`,
-            lat:String(lat), lon:String(lon),
-            type:el.tags?.amenity||el.tags?.shop||el.tags?.tourism||'lieu',
-            category:'amenity'
-          });
-        });
-      }
-    } catch(e){ console.warn('Overpass:', e.message); }
+  } catch(e) {
+    console.warn('Nominatim error:', e.message);
+    // Fallback base locale si API indisponible
+    CI_LIEUX.filter(p =>
+      p.name.toLowerCase().includes(q.toLowerCase()) ||
+      (p.alt && p.alt.some(a => a.toLowerCase().includes(q.toLowerCase())))
+    ).slice(0,6).forEach(p => results.push({
+      source:'local', name:p.name,
+      display_name: p.desc || `${p.name}, Côte d'Ivoire`,
+      lat:String(p.lat), lon:String(p.lon),
+      type:p.type, category:'place'
+    }));
   }
 
   poiResults = results;
