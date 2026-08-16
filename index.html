@@ -3577,12 +3577,10 @@ function renderEquipements(equipements){
 }
 
 // ══ STATE ══
-// ── URL API — 🔧 Remplacer après déploiement Railway ──
-const RAILWAY_URL = 'https://rezi-production-ca5a.up.railway.app/api';
+// ── URL API ──
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:8000/api'
-  : RAILWAY_URL;
-
+  : '/api';
 let state = {
   token:localStorage.getItem('token'),
   user:JSON.parse(localStorage.getItem('user')||'null'),
@@ -5979,14 +5977,13 @@ window.addEventListener('resize', () => {
 });
 
 
-// ══ KEEP-ALIVE RAILWAY ══
-// Ping toutes les 8 minutes pour éviter la mise en veille
+// ══ KEEP-ALIVE ══
 function startKeepAlive() {
   setInterval(async () => {
     try {
-      await fetch(`${RAILWAY_URL.replace('/api','')}/health`, {signal: AbortSignal.timeout(5000)});
+      await fetch('/api/health', {signal: AbortSignal.timeout(5000)});
     } catch(e) {}
-  }, 8 * 60 * 1000); // 8 minutes
+  }, 8 * 60 * 1000);
 }
 startKeepAlive();
 

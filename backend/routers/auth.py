@@ -44,7 +44,7 @@ def save_file(upload, folder):
     path = f"{UPLOAD_DIR}/{folder}/{filename}"
     with open(path, "wb") as f:
         shutil.copyfileobj(upload.file, f)
-    base_url = os.getenv("RAILWAY_URL", "https://rezi-production-ca5a.up.railway.app")
+    base_url = os.getenv("PUBLIC_BASE_URL", "http://204.168.229.74:8081")
     return f"{base_url}/{path}"
 
 
