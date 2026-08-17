@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/rezi_theme.dart';
 import '../services/api_service.dart';
-import 'home_screen.dart';
+import 'main_shell.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final loggedIn = await _api.isLoggedIn;
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => loggedIn ? const HomeScreen() : const LoginScreen()),
+      MaterialPageRoute(builder: (_) => loggedIn ? const MainShell() : const LoginScreen()),
     );
   }
 
