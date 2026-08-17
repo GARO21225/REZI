@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/residence.dart';
+import '../models/extra_models.dart';
 import '../services/api_service.dart';
 import '../theme/rezi_theme.dart';
 
@@ -21,6 +22,30 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
   void initState() {
     super.initState();
     _future = _api.fetchResidence(widget.id);
+  }
+
+  Future<void> _reserver(BuildContext context, Residence r) async {
+    final now = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (range == null || !context.mounted) return;
+    try {
+      final reservation = await _api.creerReservation(
+        residenceId: r.id, debut: range.start, fin: range.end,
+      );
+      if (!context.mounted) return;
+      final paiement = await _api.initierPaiement(reservation.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Réservation créée. Paiement : ${paiement['statut'] ?? 'en attente'}')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+    }
   }
 
   @override
@@ -96,13 +121,45 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Text('Avis', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      FutureBuilder<List<Avis>>(
+                        future: _api.fetchAvis(r.id),
+                        builder: (context, avisSnap) {
+                          final avis = avisSnap.data ?? [];
+                          if (avisSnap.connectionState == ConnectionState.waiting) {
+                            return const SizedBox(height: 40, child: Center(child: CircularProgressIndicator()));
+                          }
+                          if (avis.isEmpty) {
+                            return Text('Aucun avis pour l\'instant.', style: Theme.of(context).textTheme.bodyMedium);
+                          }
+                          return Column(
+                            children: avis.map((a) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Text(a.auteur, style: Theme.of(context).textTheme.titleMedium),
+                                    const SizedBox(width: 6),
+                                    Row(children: List.generate(5, (i) => Icon(
+                                      i < a.note ? Icons.star_rounded : Icons.star_border_rounded,
+                                      size: 14, color: ReziTokens.accent,
+                                    ))),
+                                  ]),
+                                  Text(a.commentaire, style: Theme.of(context).textTheme.bodyMedium),
+                                ],
+                              ),
+                            )).toList(),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 24),
                       ReziPrimaryButton(
                         label: 'Réserver',
                         icon: Icons.event_available_rounded,
-                        onPressed: () {
-                          // TODO: brancher sur POST /reservations (voir backend/routers/reservations.py)
-                        },
+                        onPressed: () => _reserver(context, r),
                       ),
                     ],
                   ),
