@@ -15,8 +15,7 @@ class ReziApp extends StatelessWidget {
       title: 'REZI',
       debugShowCheckedModeBanner: false,
       theme: ReziTheme.light,
-      darkTheme: ReziTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       home: const SplashScreen(),
     );
   }
