@@ -1,198 +1,138 @@
 // ═══════════════════════════════════════════════════════════════
-// REZI — Design Tokens & Theme (Flutter / Material 3)
-// Porté depuis index.html (:root CSS vars) — GARO21225/REZI
-// Ajoute google_fonts au pubspec.yaml : google_fonts: ^6.2.1
+// REZI — Design Tokens & Theme v2 (Flutter / Material 3)
+// Direction artistique : crème + vert forêt, éditorial, "Waou"
 // ═══════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// ── 1. TOKENS BRUTS (copie fidèle des variables CSS du site) ──
 class ReziTokens {
   ReziTokens._();
 
-  // Dark (thème par défaut du site : color-scheme: dark)
-  static const darkBg = Color(0xFF0B0F1A);
-  static const darkSurface = Color(0xFF131929);
-  static const darkSurface2 = Color(0xFF1C2640);
-  static const darkBorder = Color(0xFF243156);
-  static const darkText = Color(0xFFE8EDF8);
-  static const darkTextMuted = Color(0xFF7A8AAA);
+  // Palette claire (crème / vert forêt)
+  static const bg = Color(0xFFF7F5EF);
+  static const surface = Color(0xFFFFFFFF);
+  static const surface2 = Color(0xFFEFEEE6);
+  static const border = Color(0xFFE3E0D4);
+  static const text = Color(0xFF1B2A22);
+  static const textMuted = Color(0xFF6B7A70);
 
-  // Light
-  static const lightBg = Color(0xFFF5F6FA);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSurface2 = Color(0xFFEEF0F7);
-  static const lightBorder = Color(0xFFDDE1EF);
-  static const lightText = Color(0xFF1A2035);
-  static const lightTextMuted = Color(0xFF6B7A99);
+  static const primary = Color(0xFF2F5233);   // vert forêt profond
+  static const primaryLight = Color(0xFF3E6B45);
+  static const primarySoft = Color(0xFFE7EEE3); // fond pastille verte claire
 
-  // Communes aux deux thèmes
-  static const accent = Color(0xFFF5A623);   // orange
-  static const accent2 = Color(0xFFE8855A);  // corail
+  static const accent = Color(0xFFC98A4B);   // terracotta chaud (accents secondaires)
   static const success = Color(0xFF3ECF8E);
-  static const danger = Color(0xFFE25555);
+  static const danger = Color(0xFFD65B4A);
 
-  // Rayons observés dans le CSS (9–12px selon composant)
-  static const radiusSm = 7.0;
-  static const radiusMd = 9.0;
-  static const radiusLg = 12.0;
+  static const radiusSm = 10.0;
+  static const radiusMd = 16.0;
+  static const radiusLg = 26.0;
+  static const radiusPill = 999.0;
 
-  static const accentGradient = LinearGradient(
+  static const primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [accent, accent2],
+    colors: [primary, primaryLight],
   );
+
+  static Color disponibleBadgeColor(bool disponible) => disponible ? primary : danger;
 }
 
-/// ── 2. THEMES ──
 class ReziTheme {
   ReziTheme._();
 
-  static TextTheme _textTheme(Color text, Color muted) {
+  static TextTheme get _textTheme {
     final base = GoogleFonts.dmSansTextTheme();
     return base.copyWith(
-      // Playfair Display réservé aux titres de marque (logo, hero)
-      displayLarge: GoogleFonts.playfairDisplay(
-        fontSize: 28, fontWeight: FontWeight.w900, color: text, letterSpacing: -0.5,
+      // Serif éditoriale bold pour les grandes accroches, comme la référence.
+      displayLarge: GoogleFonts.fraunces(
+        fontSize: 34, fontWeight: FontWeight.w700, color: ReziTokens.text, height: 1.1, letterSpacing: -0.5,
       ),
-      displayMedium: GoogleFonts.playfairDisplay(
-        fontSize: 22, fontWeight: FontWeight.w700, color: text, letterSpacing: -0.5,
+      displayMedium: GoogleFonts.fraunces(
+        fontSize: 24, fontWeight: FontWeight.w700, color: ReziTokens.text, height: 1.15,
       ),
-      titleLarge: GoogleFonts.dmSans(fontSize: 18, fontWeight: FontWeight.w700, color: text),
-      titleMedium: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600, color: text),
-      bodyLarge: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w400, color: text),
-      bodyMedium: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w400, color: muted),
-      labelLarge: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: text),
-    );
-  }
-
-  static ThemeData get dark {
-    const cs = ColorScheme.dark(
-      primary: ReziTokens.accent,
-      secondary: ReziTokens.accent2,
-      surface: ReziTokens.darkSurface,
-      error: ReziTokens.danger,
-      onPrimary: Colors.white,
-      onSurface: ReziTokens.darkText,
-      outline: ReziTokens.darkBorder,
-    );
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: cs,
-      scaffoldBackgroundColor: ReziTokens.darkBg,
-      textTheme: _textTheme(ReziTokens.darkText, ReziTokens.darkTextMuted),
-      appBarTheme: AppBarTheme(
-        backgroundColor: ReziTokens.darkSurface,
-        foregroundColor: ReziTokens.darkText,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shape: Border(bottom: BorderSide(color: ReziTokens.darkBorder)),
-      ),
-      cardTheme: CardThemeData(
-        color: ReziTokens.darkSurface,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
-          side: const BorderSide(color: ReziTokens.darkBorder, width: 1),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: ReziTokens.darkSurface2,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-          borderSide: const BorderSide(color: ReziTokens.darkBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-          borderSide: const BorderSide(color: ReziTokens.accent, width: 1.5),
-        ),
-        hintStyle: GoogleFonts.dmSans(color: ReziTokens.darkTextMuted, fontSize: 11),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ReziTokens.accent,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReziTokens.radiusMd)),
-          textStyle: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: ReziTokens.darkText,
-          side: const BorderSide(color: ReziTokens.darkBorder, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReziTokens.radiusMd)),
-        ),
-      ),
-      dividerColor: ReziTokens.darkBorder,
+      titleLarge: GoogleFonts.dmSans(fontSize: 18, fontWeight: FontWeight.w700, color: ReziTokens.text),
+      titleMedium: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: ReziTokens.text),
+      bodyLarge: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w400, color: ReziTokens.text),
+      bodyMedium: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w500, color: ReziTokens.textMuted),
+      labelLarge: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: ReziTokens.text),
     );
   }
 
   static ThemeData get light {
     const cs = ColorScheme.light(
-      primary: ReziTokens.accent,
-      secondary: ReziTokens.accent2,
-      surface: ReziTokens.lightSurface,
+      primary: ReziTokens.primary,
+      secondary: ReziTokens.accent,
+      surface: ReziTokens.surface,
       error: ReziTokens.danger,
       onPrimary: Colors.white,
-      onSurface: ReziTokens.lightText,
-      outline: ReziTokens.lightBorder,
+      onSurface: ReziTokens.text,
+      outline: ReziTokens.border,
+      surfaceContainerHighest: ReziTokens.surface2,
     );
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-      scaffoldBackgroundColor: ReziTokens.lightBg,
-      textTheme: _textTheme(ReziTokens.lightText, ReziTokens.lightTextMuted),
+      scaffoldBackgroundColor: ReziTokens.bg,
+      textTheme: _textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: ReziTokens.lightSurface,
-        foregroundColor: ReziTokens.lightText,
+        backgroundColor: ReziTokens.bg,
+        foregroundColor: ReziTokens.text,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        shape: Border(bottom: BorderSide(color: ReziTokens.lightBorder)),
       ),
       cardTheme: CardThemeData(
-        color: ReziTokens.lightSurface,
+        color: ReziTokens.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
-          side: const BorderSide(color: ReziTokens.lightBorder, width: 1),
+          side: const BorderSide(color: ReziTokens.border, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: ReziTokens.lightSurface2,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        fillColor: ReziTokens.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-          borderSide: const BorderSide(color: ReziTokens.lightBorder, width: 1.5),
+          borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+          borderSide: const BorderSide(color: ReziTokens.border, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+          borderSide: const BorderSide(color: ReziTokens.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-          borderSide: const BorderSide(color: ReziTokens.accent, width: 1.5),
+          borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+          borderSide: const BorderSide(color: ReziTokens.primary, width: 1.5),
         ),
+        hintStyle: GoogleFonts.dmSans(color: ReziTokens.textMuted, fontSize: 13),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ReziTokens.accent,
+          backgroundColor: ReziTokens.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReziTokens.radiusMd)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReziTokens.radiusPill)),
+          textStyle: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
-      dividerColor: ReziTokens.lightBorder,
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: ReziTokens.text,
+          side: const BorderSide(color: ReziTokens.border, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ReziTokens.radiusPill)),
+        ),
+      ),
+      dividerColor: ReziTokens.border,
     );
   }
 }
 
-/// ── 3. WIDGETS RÉUTILISABLES clés du site (logo, bouton dégradé, avatar) ──
+/// ── Widgets réutilisables (identité visuelle REZI) ──
 
-/// Reproduit .logo-icon : carré dégradé accent→accent2, coins arrondis 9px
 class ReziLogoBadge extends StatelessWidget {
   final double size;
   const ReziLogoBadge({super.key, this.size = 34});
@@ -203,8 +143,8 @@ class ReziLogoBadge extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: ReziTokens.accentGradient,
-        borderRadius: BorderRadius.circular(9),
+        gradient: ReziTokens.primaryGradient,
+        borderRadius: BorderRadius.circular(size * 0.28),
       ),
       alignment: Alignment.center,
       child: Icon(Icons.home_rounded, size: size * 0.5, color: Colors.white),
@@ -212,7 +152,6 @@ class ReziLogoBadge extends StatelessWidget {
   }
 }
 
-/// Reproduit .btn-primary : dégradé + hover(elevation) → ici un splash + shadow léger
 class ReziPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -224,39 +163,32 @@ class ReziPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onPressed == null;
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: ReziTokens.accentGradient,
-        borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-        boxShadow: [
-          BoxShadow(
-            color: ReziTokens.accent.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: disabled ? ReziTokens.textMuted.withValues(alpha: 0.3) : null,
+        gradient: disabled ? null : ReziTokens.primaryGradient,
+        borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
+          borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
           onTap: onPressed,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 16, color: Colors.white),
-                  const SizedBox(width: 8),
-                ],
                 Text(
                   label,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white,
-                  ),
+                  style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
+                if (icon != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(icon, size: 16, color: Colors.white),
+                ],
               ],
             ),
           ),
@@ -266,7 +198,33 @@ class ReziPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Reproduit .avatar : cercle dégradé avec initiales
+/// Bouton d'action circulaire vert plein — flèche façon référence détail.
+class ReziCircleActionButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final double size;
+  const ReziCircleActionButton({super.key, required this.icon, this.onPressed, this.size = 44});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(gradient: ReziTokens.primaryGradient, shape: BoxShape.circle),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: SizedBox(
+            width: size, height: size,
+            child: Icon(icon, color: Colors.white, size: size * 0.42),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ReziAvatar extends StatelessWidget {
   final String initials;
   final double size;
@@ -277,15 +235,52 @@ class ReziAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        gradient: ReziTokens.accentGradient,
-        shape: BoxShape.circle,
-      ),
+      decoration: const BoxDecoration(gradient: ReziTokens.primaryGradient, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+        style: GoogleFonts.dmSans(fontSize: size * 0.34, fontWeight: FontWeight.w700, color: Colors.white),
       ),
+    );
+  }
+}
+
+/// Icône ronde blanche (flottante sur les images), façon bouton retour/partage référence.
+class ReziGhostIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  final Color iconColor;
+  const ReziGhostIconButton({super.key, required this.icon, this.onTap, this.iconColor = ReziTokens.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Icon(icon, size: 18, color: iconColor),
+      ),
+    );
+  }
+}
+
+/// Pastille de statut (ex : "Active"), façon référence card.
+class ReziStatusPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  const ReziStatusPill({super.key, required this.label, this.color = ReziTokens.primary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(ReziTokens.radiusPill)),
+      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
     );
   }
 }
