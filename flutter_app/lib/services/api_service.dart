@@ -10,7 +10,7 @@ import '../models/extra_models.dart';
 class ApiService {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://204.168.229.74:8081',
+    defaultValue: 'http://204.168.229.74:8081/api',
   );
 
   final _storage = const FlutterSecureStorage();
@@ -332,9 +332,23 @@ class ApiService {
     }).toList().cast<Map<String, dynamic>>();
   }
 
+  // ── Notifications push ──
+  /// Enregistre le token FCM/APNs de l'appareil auprès du backend.
+  /// Nécessite le package `firebase_messaging` configuré côté Flutter
+  /// (google-services.json / GoogleService-Info.plist) — non inclus ici
+  /// car cela dépend de votre projet Firebase.
+  Future<void> enregistrerTokenNotification(String deviceToken) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/notifications/token'),
+      headers: _headers(await _token),
+      body: jsonEncode({'token': deviceToken}),
+    );
+    if (res.statusCode >= 400) throw Exception('Erreur enregistrement token notification');
+  }
+
   Uri messagesWebSocketUrl(String userId, String token) {
     final isSecure = baseUrl.startsWith('https');
-    final host = baseUrl.replaceFirst(RegExp(r'^https?://'), '');
+    final host = baseUrl.replaceFirst(RegExp(r'^https?://'), '').replaceFirst(RegExp(r'/api/?$'), '');
     return Uri.parse('${isSecure ? 'wss' : 'ws'}://$host/api/messages/ws/$userId?token=$token');
   }
 }
