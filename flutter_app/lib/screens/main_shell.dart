@@ -4,9 +4,8 @@ import 'favoris_screen.dart';
 import 'mes_reservations_screen.dart';
 import 'conversations_screen.dart';
 import 'profil_screen.dart';
+import '../theme/rezi_theme.dart';
 
-/// Coquille de navigation principale (remplace la SplashScreen -> HomeScreen directe
-/// une fois l'utilisateur connecté). Regroupe les 4 sections clés du site.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -25,19 +24,58 @@ class _MainShellState extends State<MainShell> {
     ProfilScreen(),
   ];
 
+  static const _icons = [
+    Icons.home_rounded,
+    Icons.favorite_rounded,
+    Icons.calendar_month_rounded,
+    Icons.chat_bubble_rounded,
+    Icons.person_rounded,
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Accueil'),
-          NavigationDestination(icon: Icon(Icons.favorite_border), selectedIcon: Icon(Icons.favorite), label: 'Favoris'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Réservations'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: 'Messages'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profil'),
+      backgroundColor: ReziTokens.bg,
+      body: Stack(
+        children: [
+          IndexedStack(index: _index, children: _screens),
+          // ── Nav flottante en pilule, façon référence ──
+          Positioned(
+            left: 24, right: 24, bottom: 20,
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(_icons.length, (i) {
+                  final active = i == _index;
+                  return GestureDetector(
+                    onTap: () => setState(() => _index = i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        gradient: active ? ReziTokens.primaryGradient : null,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _icons[i],
+                        size: 20,
+                        color: active ? Colors.white : ReziTokens.textMuted,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
         ],
       ),
     );
