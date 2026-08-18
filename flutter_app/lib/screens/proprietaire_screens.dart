@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/extra_models.dart';
@@ -80,12 +81,15 @@ class _CreerResidenceScreenState extends State<CreerResidenceScreen> {
   final _adresse = TextEditingController();
   final _description = TextEditingController();
   List<XFile> _photos = [];
+  List<Uint8List> _photoBytes = [];
   bool _loading = false;
   String? _error;
 
   Future<void> _choisirPhotos() async {
     final images = await _picker.pickMultiImage(imageQuality: 85);
-    if (images.isNotEmpty) setState(() => _photos = images);
+    if (images.isEmpty) return;
+    final bytes = await Future.wait(images.map((f) => f.readAsBytes()));
+    setState(() { _photos = images; _photoBytes = bytes; });
   }
 
   Future<void> _publier() async {
@@ -102,7 +106,7 @@ class _CreerResidenceScreenState extends State<CreerResidenceScreen> {
         'prix': _prix.text.trim(),
         'adresse': _adresse.text.trim(),
         'description': _description.text.trim(),
-      }, _photos.map((p) => p.path).toList());
+      }, List.generate(_photos.length, (i) => (_photos[i].name, _photoBytes[i])));
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -131,12 +135,12 @@ class _CreerResidenceScreenState extends State<CreerResidenceScreen> {
                   ? const Center(child: Icon(Icons.add_photo_alternate_outlined, size: 36))
                   : ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: _photos.length,
+                      itemCount: _photoBytes.length,
                       itemBuilder: (_, i) => Padding(
                         padding: const EdgeInsets.all(6),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(ReziTokens.radiusSm),
-                          child: Image.network(_photos[i].path, width: 110, fit: BoxFit.cover),
+                          child: Image.memory(_photoBytes[i], width: 110, fit: BoxFit.cover),
                         ),
                       ),
                     ),
@@ -242,3 +246,4 @@ class _ReservationsProprietaireScreenState extends State<ReservationsProprietair
     );
   }
 }
+
