@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/rezi_theme.dart';
 import 'main_shell.dart';
+import 'register_screen.dart';
+import 'password_screens.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,6 +72,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       : ReziPrimaryButton(label: 'Se connecter', onPressed: _submit),
                 ),
                 const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  ),
+                  child: const Text('Créer un compte'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MotDePasseOublieScreen()),
+                  ),
+                  child: const Text('Mot de passe oublié ?'),
+                ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (_) => const MainShell()),
