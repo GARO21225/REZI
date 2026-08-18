@@ -18,53 +18,44 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchCtrl = TextEditingController();
   final _favoris = <String>{};
 
-  static const _categories = [
-    ('Tous', Icons.apps_rounded),
-    ('Studio', Icons.bed_outlined),
-    ('Appartement', Icons.apartment_outlined),
-    ('Villa', Icons.villa_outlined),
-    ('Chambre', Icons.hotel_outlined),
-  ];
-  String _categorieActive = 'Tous';
-
   @override
   void initState() {
     super.initState();
     _future = _api.fetchResidences();
   }
 
-  void _reload() {
-    setState(() => _future = _api.fetchResidences(
-      type: _categorieActive == 'Tous' ? null : _categorieActive,
-    ));
-  }
+  void _reload() => setState(() => _future = _api.fetchResidences());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ReziTokens.bg,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => _reload(),
           child: CustomScrollView(
             slivers: [
-              // ── En-tête : salutation + localisation + notifications ──
+              // ── Localisation + notifications ──
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                   child: Row(
                     children: [
-                      const ReziAvatar(initials: 'U', size: 42),
-                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: ReziTokens.primarySoft, shape: BoxShape.circle),
+                        child: const Icon(Icons.location_on_rounded, size: 18, color: ReziTokens.primary),
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Bonjour 👋', style: Theme.of(context).textTheme.bodyMedium),
+                            Text('Localisation actuelle', style: Theme.of(context).textTheme.bodyMedium),
                             Row(
                               children: [
-                                const Icon(Icons.location_on_rounded, size: 14, color: ReziTokens.accent),
-                                const SizedBox(width: 2),
                                 Text('Grand Abidjan', style: Theme.of(context).textTheme.titleMedium),
+                                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: ReziTokens.textMuted),
                               ],
                             ),
                           ],
@@ -72,46 +63,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          shape: BoxShape.circle,
-                        ),
+                        decoration: BoxDecoration(color: ReziTokens.surface2, shape: BoxShape.circle),
                         child: const Icon(Icons.notifications_none_rounded, size: 20),
                       ),
                     ],
                   ),
                 ),
               ),
-              // ── Accroche ──
+              // ── Recherche + filtre ──
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-                  child: Text('Trouvez votre\nprochaine résidence',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 24)),
-                ),
-              ),
-              // ── Barre de recherche + filtre ──
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _searchCtrl,
                           decoration: const InputDecoration(
-                            hintText: 'Quartier, ville, résidence...',
-                            prefixIcon: Icon(Icons.search_rounded),
+                            hintText: 'Rechercher',
+                            prefixIcon: Icon(Icons.search_rounded, size: 20),
                           ),
                           onSubmitted: (_) => _reload(),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: ReziTokens.accentGradient,
-                          borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-                        ),
+                      Container(
+                        width: 48, height: 48,
+                        decoration: const BoxDecoration(gradient: ReziTokens.primaryGradient, shape: BoxShape.circle),
                         child: IconButton(
                           onPressed: _reload,
                           icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
@@ -121,70 +99,68 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // ── Chips de catégories ──
+              // ── Bannière promo (façon "cashback" de la référence) ──
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 56,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) {
-                      final (label, icon) = _categories[i];
-                      final active = label == _categorieActive;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => _categorieActive = label);
-                          _reload();
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            gradient: active ? ReziTokens.accentGradient : null,
-                            color: active ? null : Theme.of(context).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: ReziTokens.primaryGradient,
+                      borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(icon, size: 16, color: active ? Colors.white : null),
-                              const SizedBox(width: 6),
-                              Text(label, style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600,
-                                color: active ? Colors.white : null,
-                              )),
+                              Text('Réservez tôt,\néconomisez plus',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                              const SizedBox(height: 4),
+                              Text('Offres limitées ce mois-ci',
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
                             ],
                           ),
                         ),
-                      );
-                    },
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
+                          ),
+                          child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 26),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              // ── Section titre ──
+              // ── Section titre + tri ──
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Recommandé pour vous', style: Theme.of(context).textTheme.titleLarge),
+                      Row(
+                        children: [
+                          Text('Par défaut', style: Theme.of(context).textTheme.bodyMedium),
+                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: ReziTokens.textMuted),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-              // ── Grille de résidences ──
+              // ── Liste de résidences ──
               FutureBuilder<List<Residence>>(
                 future: _future,
                 builder: (context, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
                     return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(48),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
+                      child: Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator())),
                     );
                   }
                   if (snap.hasError) {
@@ -201,32 +177,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     return SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.all(48),
-                        child: Center(child: Text('Aucune résidence trouvée.',
-                            style: Theme.of(context).textTheme.bodyMedium)),
+                        child: Center(child: Text('Aucune résidence trouvée.', style: Theme.of(context).textTheme.bodyMedium)),
                       ),
                     );
                   }
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                    sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: 0.68,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, i) => ResidenceCard(
-                          residence: items[i],
-                          isFavori: _favoris.contains(items[i].id),
-                          onToggleFavori: (v) => setState(
-                            () => v ? _favoris.add(items[i].id) : _favoris.remove(items[i].id),
-                          ),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => ResidenceDetailScreen(id: items[i].id)),
-                          ),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                    sliver: SliverList.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (context, i) => ResidenceCard(
+                        residence: items[i],
+                        isFavori: _favoris.contains(items[i].id),
+                        onToggleFavori: (v) => setState(
+                          () => v ? _favoris.add(items[i].id) : _favoris.remove(items[i].id),
                         ),
-                        childCount: items.length,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => ResidenceDetailScreen(id: items[i].id)),
+                        ),
                       ),
                     ),
                   );
