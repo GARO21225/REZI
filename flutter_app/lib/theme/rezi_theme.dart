@@ -217,7 +217,10 @@ class ReziPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
-  const ReziPrimaryButton({super.key, required this.label, this.onPressed, this.icon});
+  final bool fullWidth;
+  const ReziPrimaryButton({
+    super.key, required this.label, this.onPressed, this.icon, this.fullWidth = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -239,18 +242,19 @@ class ReziPrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
           onTap: onPressed,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 14, color: Colors.white),
-                  const SizedBox(width: 6),
+                  Icon(icon, size: 16, color: Colors.white),
+                  const SizedBox(width: 8),
                 ],
                 Text(
                   label,
                   style: GoogleFonts.dmSans(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white,
+                    fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white,
                   ),
                 ),
               ],
