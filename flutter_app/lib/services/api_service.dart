@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/residence.dart';
@@ -168,13 +169,18 @@ class ApiService {
     if (res.statusCode != 200) throw Exception('Erreur lors de la demande');
   }
 
-  Future<Residence> creerResidence(Map<String, String> champs, List<String> photoPaths) async {
+  /// [photos] : paires (nomFichier, bytes) — cross-plateforme (web + mobile),
+  /// contrairement à MultipartFile.fromPath qui échoue sur Flutter Web.
+  Future<Residence> creerResidence(
+    Map<String, String> champs,
+    List<(String, Uint8List)> photos,
+  ) async {
     final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/residences/'));
     final token = await _token;
     if (token != null) req.headers['Authorization'] = 'Bearer $token';
     req.fields.addAll(champs);
-    for (final p in photoPaths) {
-      req.files.add(await http.MultipartFile.fromPath('photos', p));
+    for (final (nom, bytes) in photos) {
+      req.files.add(http.MultipartFile.fromBytes('photos', bytes, filename: nom));
     }
     final streamed = await req.send();
     final res = await http.Response.fromStream(streamed);
@@ -352,3 +358,4 @@ class ApiService {
     return Uri.parse('${isSecure ? 'wss' : 'ws'}://$host/api/messages/ws/$userId?token=$token');
   }
 }
+
