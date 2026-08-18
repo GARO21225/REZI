@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'favoris_screen.dart';
 import 'mes_reservations_screen.dart';
 import 'conversations_screen.dart';
+import 'profil_screen.dart';
 
 /// Coquille de navigation principale (remplace la SplashScreen -> HomeScreen directe
 /// une fois l'utilisateur connecté). Regroupe les 4 sections clés du site.
@@ -21,6 +22,7 @@ class _MainShellState extends State<MainShell> {
     FavorisScreen(),
     MesReservationsScreen(),
     ConversationsScreen(),
+    ProfilScreen(),
   ];
 
   @override
@@ -35,6 +37,7 @@ class _MainShellState extends State<MainShell> {
           NavigationDestination(icon: Icon(Icons.favorite_border), selectedIcon: Icon(Icons.favorite), label: 'Favoris'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Réservations'),
           NavigationDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: 'Messages'),
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
     );
