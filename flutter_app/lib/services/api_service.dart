@@ -73,6 +73,117 @@ class ApiService {
 
   Future<void> logout() => _storage.delete(key: 'jwt_token');
 
+  // ── Inscription (avec vérification OTP par email) ──
+  Future<void> demanderOtpInscription({
+    required String email,
+    required String motDePasse,
+    required String nom,
+    required String prenom,
+    String telephone = '',
+  }) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/register/request-otp'))
+      ..fields['email'] = email
+      ..fields['mot_de_passe'] = motDePasse
+      ..fields['nom'] = nom
+      ..fields['prenom'] = prenom
+      ..fields['role'] = 'usager'
+      ..fields['telephone'] = telephone;
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200) {
+      final data = jsonDecode(res.body);
+      throw Exception(data['detail'] ?? 'Erreur lors de la demande de code');
+    }
+  }
+
+  Future<String> verifierOtpInscription(String email, String code) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/register/verify-otp'))
+      ..fields['email'] = email
+      ..fields['code'] = code;
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200) {
+      final data = jsonDecode(res.body);
+      throw Exception(data['detail'] ?? 'Code incorrect');
+    }
+    final data = jsonDecode(res.body);
+    final token = data['access_token'] as String;
+    await _storage.write(key: 'jwt_token', value: token);
+    return token;
+  }
+
+  /// Inscription directe sans OTP (fallback si l'API OTP est indisponible,
+  /// comme dans le site web — voir index.html registerDirect()).
+  Future<String> registerDirect({
+    required String email,
+    required String motDePasse,
+    required String nom,
+    required String prenom,
+    String telephone = '',
+  }) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/register'))
+      ..fields['email'] = email
+      ..fields['mot_de_passe'] = motDePasse
+      ..fields['nom'] = nom
+      ..fields['prenom'] = prenom
+      ..fields['role'] = 'usager'
+      ..fields['telephone'] = telephone;
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200) {
+      final data = jsonDecode(res.body);
+      throw Exception(data['detail'] ?? 'Erreur lors de l\'inscription');
+    }
+    final data = jsonDecode(res.body);
+    final token = data['access_token'] as String;
+    await _storage.write(key: 'jwt_token', value: token);
+    return token;
+  }
+
+  // ── Mot de passe ──
+  Future<void> motDePasseOublie(String email) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    if (res.statusCode != 200) throw Exception('Erreur lors de l\'envoi du lien de réinitialisation');
+  }
+
+  Future<void> changerMotDePasse(String ancien, String nouveau) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/change-password'),
+      headers: _headers(await _token),
+      body: jsonEncode({'ancien_mot_de_passe': ancien, 'nouveau_mot_de_passe': nouveau}),
+    );
+    if (res.statusCode != 200) throw Exception('Erreur lors du changement de mot de passe');
+  }
+
+  // ── Espace propriétaire ──
+  Future<void> demandeProprietaire() async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/users/demande-proprietaire'),
+      headers: _headers(await _token),
+    );
+    if (res.statusCode != 200) throw Exception('Erreur lors de la demande');
+  }
+
+  Future<Residence> creerResidence(Map<String, String> champs, List<String> photoPaths) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$baseUrl/residences/'));
+    final token = await _token;
+    if (token != null) req.headers['Authorization'] = 'Bearer $token';
+    req.fields.addAll(champs);
+    for (final p in photoPaths) {
+      req.files.add(await http.MultipartFile.fromPath('photos', p));
+    }
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception('Erreur création résidence (${res.statusCode})');
+    }
+    return Residence.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
+  }
+
   Future<bool> get isLoggedIn async => (await _token) != null;
 
   // ── Avis (reviews) ──
@@ -198,6 +309,29 @@ class ApiService {
   }
 
   /// URL du WebSocket temps réel (ws:// en dev http, wss:// si backend en https).
+  /// Recherche géographique de suggestions (autocomplete d'adresse) — Photon/Komoot,
+  /// limité à la Côte d'Ivoire, comme dans le site.
+  Future<List<Map<String, dynamic>>> suggestionsAdresse(String q) async {
+    if (q.trim().isEmpty) return [];
+    final uri = Uri.parse(
+      'https://photon.komoot.io/api/?q=${Uri.encodeComponent(q)}&limit=8&lang=fr&bbox=-8.6,4.3,-2.5,10.7',
+    );
+    final res = await http.get(uri).timeout(const Duration(seconds: 6));
+    if (res.statusCode != 200) return [];
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    final features = (data['features'] as List?) ?? [];
+    return features.map((f) {
+      final props = f['properties'] as Map<String, dynamic>;
+      final coords = (f['geometry']['coordinates'] as List);
+      return {
+        'nom': props['name'] ?? props['street'] ?? '',
+        'ville': props['city'] ?? '',
+        'longitude': coords[0],
+        'latitude': coords[1],
+      };
+    }).toList().cast<Map<String, dynamic>>();
+  }
+
   Uri messagesWebSocketUrl(String userId, String token) {
     final isSecure = baseUrl.startsWith('https');
     final host = baseUrl.replaceFirst(RegExp(r'^https?://'), '');
