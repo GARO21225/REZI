@@ -105,19 +105,43 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                               )),
                             ),
                           ),
-                        if (!r.disponible)
-                          Positioned(
-                            top: 100, left: 20,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: ReziTokens.danger,
-                                borderRadius: BorderRadius.circular(ReziTokens.radiusSm),
+                        // ── Pastille note + type, façon "4.9 Apartment" de la référence ──
+                        Positioned(
+                          bottom: 26, left: 16,
+                          child: Row(
+                            children: [
+                              if (r.note != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star_rounded, size: 14, color: ReziTokens.accent),
+                                      const SizedBox(width: 3),
+                                      Text(r.note!.toStringAsFixed(1),
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: ReziTokens.text)),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: ReziTokens.disponibleBadgeColor(r.disponible),
+                                  borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+                                ),
+                                child: Text(
+                                  r.disponible ? r.type : 'Indisponible',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                ),
                               ),
-                              child: const Text('Indisponible',
-                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
-                            ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -144,7 +168,7 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(Icons.location_on_outlined, size: 14, color: ReziTokens.darkTextMuted),
+                                        const Icon(Icons.location_on_outlined, size: 14, color: ReziTokens.textMuted),
                                         const SizedBox(width: 4),
                                         Expanded(child: Text(r.adresse ?? r.type,
                                             style: Theme.of(context).textTheme.bodyMedium)),
@@ -293,17 +317,17 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _CircleIconButton(
-                      icon: Icons.arrow_back_rounded,
+                    ReziGhostIconButton(
+                      icon: Icons.arrow_back_ios_new_rounded,
                       onTap: () => Navigator.of(context).pop(),
                     ),
                     Row(
                       children: [
-                        _CircleIconButton(icon: Icons.share_outlined, onTap: () {}),
+                        ReziGhostIconButton(icon: Icons.ios_share_rounded, onTap: () {}),
                         const SizedBox(width: 8),
-                        _CircleIconButton(
+                        ReziGhostIconButton(
                           icon: _favori ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          iconColor: _favori ? ReziTokens.accent2 : Colors.white,
+                          iconColor: _favori ? ReziTokens.danger : ReziTokens.primary,
                           onTap: () => setState(() => _favori = !_favori),
                         ),
                       ],
@@ -311,36 +335,52 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                   ],
                 ),
               ),
-              // ── Barre de réservation sticky en bas ──
+              // ── Pilule de réservation flottante, façon référence détail ──
               Positioned(
-                left: 0, right: 0, bottom: 0,
+                left: 20, right: 20, bottom: 20,
                 child: FutureBuilder<Residence>(
                   future: _future,
                   builder: (context, snap) {
                     if (!snap.hasData) return const SizedBox.shrink();
                     final r = snap.data!;
                     return Container(
-                      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, -4))],
+                        color: const Color(0xFF1B2A22),
+                        borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))],
                       ),
                       child: Row(
                         children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${r.prix.toStringAsFixed(0)} FCFA',
+                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                              const Text('par nuit', style: TextStyle(color: Colors.white60, fontSize: 10)),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          Container(width: 1, height: 28, color: Colors.white24),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${r.prix.toStringAsFixed(0)} FCFA',
-                                    style: Theme.of(context).textTheme.displayMedium
-                                        ?.copyWith(color: ReziTokens.accent, fontSize: 20)),
-                                Text('par nuit', style: Theme.of(context).textTheme.bodyMedium),
-                              ],
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.calendar_today_rounded, size: 14, color: Colors.white70),
+                                  SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text('Choisir les dates',
+                                        style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          ReziPrimaryButton(
-                            label: 'Réserver',
-                            icon: Icons.event_available_rounded,
+                          ReziCircleActionButton(
+                            icon: Icons.arrow_forward_rounded,
                             onPressed: r.disponible ? () => _reserver(context, r) : null,
                           ),
                         ],
@@ -352,25 +392,6 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final VoidCallback onTap;
-  const _CircleIconButton({required this.icon, required this.onTap, this.iconColor = Colors.white});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
-        child: Icon(icon, size: 18, color: iconColor),
       ),
     );
   }
