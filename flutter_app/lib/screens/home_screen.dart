@@ -17,6 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Residence>> _future;
   final _searchCtrl = TextEditingController();
   final _favoris = <String>{};
+  List<Map<String, dynamic>> _suggestions = [];
+  bool _rechercheOuverte = false;
+  double? _lat;
+  double? _lng;
 
   @override
   void initState() {
@@ -24,7 +28,30 @@ class _HomeScreenState extends State<HomeScreen> {
     _future = _api.fetchResidences();
   }
 
-  void _reload() => setState(() => _future = _api.fetchResidences());
+  void _reload() => setState(
+    () => _future = _api.fetchResidences(lat: _lat, lng: _lng, rayonKm: (_lat != null) ? 15 : null),
+  );
+
+  Future<void> _onSearchChanged(String q) async {
+    if (q.trim().length < 2) {
+      setState(() { _suggestions = []; _rechercheOuverte = false; });
+      return;
+    }
+    final res = await _api.suggestionsAdresse(q);
+    if (!mounted) return;
+    setState(() { _suggestions = res; _rechercheOuverte = res.isNotEmpty; });
+  }
+
+  void _selectionnerSuggestion(Map<String, dynamic> s) {
+    _searchCtrl.text = '${s['nom']}${(s['ville'] as String).isNotEmpty ? ', ${s['ville']}' : ''}';
+    setState(() {
+      _lat = (s['latitude'] as num).toDouble();
+      _lng = (s['longitude'] as num).toDouble();
+      _suggestions = [];
+      _rechercheOuverte = false;
+    });
+    _reload();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,31 +97,69 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // ── Recherche + filtre ──
+              // ── Recherche + filtre + suggestions géographiques ──
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchCtrl,
-                          decoration: const InputDecoration(
-                            hintText: 'Rechercher',
-                            prefixIcon: Icon(Icons.search_rounded, size: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchCtrl,
+                              decoration: InputDecoration(
+                                hintText: 'Quartier, ville, résidence...',
+                                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                                suffixIcon: (_lat != null)
+                                    ? IconButton(
+                                        icon: const Icon(Icons.close_rounded, size: 18),
+                                        onPressed: () {
+                                          _searchCtrl.clear();
+                                          setState(() { _lat = null; _lng = null; _suggestions = []; });
+                                          _reload();
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              onChanged: _onSearchChanged,
+                              onSubmitted: (_) => _reload(),
+                            ),
                           ),
-                          onSubmitted: (_) => _reload(),
-                        ),
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 48, height: 48,
+                            decoration: const BoxDecoration(gradient: ReziTokens.primaryGradient, shape: BoxShape.circle),
+                            child: IconButton(
+                              onPressed: _reload,
+                              icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Container(
-                        width: 48, height: 48,
-                        decoration: const BoxDecoration(gradient: ReziTokens.primaryGradient, shape: BoxShape.circle),
-                        child: IconButton(
-                          onPressed: _reload,
-                          icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
+                      // ── Dropdown de suggestions d'adresse (Photon/Komoot) ──
+                      if (_rechercheOuverte)
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
+                            border: Border.all(color: ReziTokens.border),
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: _suggestions.map((s) => ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.location_on_outlined, size: 18, color: ReziTokens.primary),
+                              title: Text(s['nom'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                              subtitle: (s['ville'] as String).isNotEmpty
+                                  ? Text(s['ville'] as String, style: const TextStyle(fontSize: 11))
+                                  : null,
+                              onTap: () => _selectionnerSuggestion(s),
+                            )).toList(),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
