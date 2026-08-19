@@ -37,7 +37,9 @@ class ApiService {
       if (lng != null) 'lng': lng.toString(),
       if (rayonKm != null) 'rayon_km': rayonKm.toString(),
     };
-    final uri = Uri.parse('$baseUrl/residences').replace(queryParameters: qp);
+    // Slash final obligatoire : sans lui, FastAPI répond 307 et son Location
+    // ne réinclut pas le port 8081, ce qui casse le fetch depuis le navigateur.
+    final uri = Uri.parse('$baseUrl/residences/').replace(queryParameters: qp);
     final res = await http.get(uri, headers: _headers(await _token));
     if (res.statusCode != 200) {
       throw Exception('Erreur chargement résidences (${res.statusCode})');
@@ -209,7 +211,7 @@ class ApiService {
 
   // ── Favoris ──
   Future<List<Residence>> fetchFavoris() async {
-    final res = await http.get(Uri.parse('$baseUrl/favoris'), headers: _headers(await _token));
+    final res = await http.get(Uri.parse('$baseUrl/favoris/'), headers: _headers(await _token));
     if (res.statusCode != 200) throw Exception('Erreur chargement favoris');
     final data = jsonDecode(utf8.decode(res.bodyBytes)) as List;
     return data.map((e) => Residence.fromJson(e)).toList();
