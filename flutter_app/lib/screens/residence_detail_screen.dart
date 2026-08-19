@@ -244,7 +244,7 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                                 ),
                                 children: [
                                   TileLayer(
-                                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                                     subdomains: const ['a', 'b', 'c'],
                                   ),
                                   MarkerLayer(markers: [
