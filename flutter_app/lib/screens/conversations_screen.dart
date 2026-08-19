@@ -36,6 +36,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             return const Center(child: Text('Aucune conversation.'));
           }
           return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 100),
             itemCount: items.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, i) {
