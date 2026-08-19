@@ -49,7 +49,7 @@ class _MesReservationsScreenState extends State<MesReservationsScreen> {
             return const Center(child: Text('Aucune réservation.'));
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
