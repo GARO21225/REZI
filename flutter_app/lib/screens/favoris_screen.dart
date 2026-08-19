@@ -36,7 +36,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
             return const Center(child: Text('Aucun favori pour le moment.'));
           }
           return GridView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 320,
               mainAxisSpacing: 12,
