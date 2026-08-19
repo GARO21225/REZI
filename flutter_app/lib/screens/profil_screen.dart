@@ -14,6 +14,7 @@ class ProfilScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
       body: ListView(
+        padding: const EdgeInsets.only(bottom: 100),
         children: [
           const SizedBox(height: 20),
           const Center(child: ReziAvatar(initials: 'U', size: 64)),
