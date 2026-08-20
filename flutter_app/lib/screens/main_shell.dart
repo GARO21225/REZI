@@ -24,12 +24,12 @@ class _MainShellState extends State<MainShell> {
     ProfilScreen(),
   ];
 
-  static const _icons = [
-    Icons.home_rounded,
-    Icons.favorite_rounded,
-    Icons.calendar_month_rounded,
-    Icons.chat_bubble_rounded,
-    Icons.person_rounded,
+  static const _items = [
+    (Icons.home_rounded, 'Accueil'),
+    (Icons.favorite_rounded, 'Favoris'),
+    (Icons.calendar_month_rounded, 'Réservations'),
+    (Icons.chat_bubble_rounded, 'Messages'),
+    (Icons.person_rounded, 'Profil'),
   ];
 
   @override
@@ -39,12 +39,11 @@ class _MainShellState extends State<MainShell> {
       body: Stack(
         children: [
           IndexedStack(index: _index, children: _screens),
-          // ── Nav flottante en pilule, façon référence ──
+          // ── Nav flottante avec icônes + labels, façon référence ──
           Positioned(
-            left: 24, right: 24, bottom: 20,
+            left: 16, right: 16, bottom: 16,
             child: Container(
-              height: 64,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
@@ -54,21 +53,36 @@ class _MainShellState extends State<MainShell> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(_icons.length, (i) {
+                children: List.generate(_items.length, (i) {
                   final active = i == _index;
+                  final (icon, label) = _items[i];
                   return GestureDetector(
                     onTap: () => setState(() => _index = i),
+                    behavior: HitTestBehavior.opaque,
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 44, height: 44,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                      padding: EdgeInsets.symmetric(horizontal: active ? 14 : 10, vertical: 10),
                       decoration: BoxDecoration(
                         gradient: active ? ReziTokens.primaryGradient : null,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
                       ),
-                      child: Icon(
-                        _icons[i],
-                        size: 20,
-                        color: active ? Colors.white : ReziTokens.textMuted,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, size: 20, color: active ? Colors.white : ReziTokens.textMuted),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOut,
+                            child: active
+                                ? Padding(
+                                    padding: const EdgeInsets.only(left: 6),
+                                    child: Text(label,
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
                       ),
                     ),
                   );
