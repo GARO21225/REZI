@@ -50,7 +50,7 @@ class OnboardingScreen extends StatelessWidget {
                   label: 'Commencer',
                   fullWidth: true,
                   onPressed: () => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    reziPageRoute(const LoginScreen()),
                   ),
                 ),
               ),
