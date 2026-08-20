@@ -124,8 +124,8 @@ class _ShimmerBox extends StatefulWidget {
 
 class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl = AnimationController(
-    vsync: this, duration: const Duration(milliseconds: 1100),
-  )..repeat(reverse: true);
+    vsync: this, duration: const Duration(milliseconds: 1400),
+  )..repeat();
 
   @override
   void dispose() {
@@ -137,11 +137,29 @@ class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderState
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (context, child) => Container(
-        color: Color.lerp(ReziTokens.surface2, ReziTokens.border, _ctrl.value),
+      builder: (context, child) => ShaderMask(
+        blendMode: BlendMode.srcATop,
+        shaderCallback: (bounds) {
+          final dx = bounds.width * 2 * _ctrl.value - bounds.width * 0.5;
+          return LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [ReziTokens.surface2, Colors.white, ReziTokens.surface2],
+            stops: const [0.35, 0.5, 0.65],
+            transform: _SlideGradient(dx),
+          ).createShader(bounds);
+        },
+        child: Container(color: ReziTokens.surface2),
       ),
     );
   }
+}
+
+class _SlideGradient extends GradientTransform {
+  final double dx;
+  const _SlideGradient(this.dx);
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) => Matrix4.translationValues(dx, 0, 0);
 }
 
 /// Fait apparaître son enfant en fondu + léger glissement, avec un délai
