@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   () => v ? _favoris.add(residence.id) : _favoris.remove(residence.id),
                                 ),
                                 onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => ResidenceDetailScreen(id: residence.id)),
+                                  reziPageRoute(ResidenceDetailScreen(id: residence.id)),
                                 ),
                               ),
                             ),
