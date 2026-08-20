@@ -76,12 +76,20 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
             children: [
               CustomScrollView(
                 slivers: [
-                  // ── Carrousel photo plein écran avec indicateurs ──
-                  SliverToBoxAdapter(
-                    child: Stack(
+                  // ── Carrousel photo plein écran, avec effet parallax/stretch au scroll ──
+                  SliverAppBar(
+                    expandedHeight: 340,
+                    pinned: false,
+                    stretch: true,
+                    backgroundColor: Colors.transparent,
+                    automaticallyImplyLeading: false,
+                    stretchTriggerOffset: 100,
+                    onStretchTrigger: () async {},
+                    flexibleSpace: FlexibleSpaceBar(
+                      stretchModes: const [StretchMode.zoomBackground],
+                      background: Stack(
                       children: [
-                        SizedBox(
-                          height: 340,
+                        Positioned.fill(
                           child: r.photos.isEmpty
                               ? Container(color: Theme.of(context).colorScheme.surfaceContainerHighest)
                               : PageView.builder(
@@ -155,6 +163,7 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                           ),
                         ),
                       ],
+                    ),
                     ),
                   ),
                   // ── Contenu ──
@@ -385,8 +394,15 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${r.prix.toStringAsFixed(0)} FCFA',
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0, end: r.prix),
+                                duration: const Duration(milliseconds: 900),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, value, child) => Text(
+                                  '${value.toStringAsFixed(0)} FCFA',
+                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                                ),
+                              ),
                               const Text('par nuit', style: TextStyle(color: Colors.white60, fontSize: 10)),
                             ],
                           ),
