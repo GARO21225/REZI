@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'favoris_screen.dart';
@@ -42,15 +43,20 @@ class _MainShellState extends State<MainShell> {
           // ── Nav flottante avec icônes + labels, façon référence ──
           Positioned(
             left: 16, right: 16, bottom: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
-                ],
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(ReziTokens.radiusPill),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8)),
+                    ],
+                  ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(_items.length, (i) {
@@ -87,6 +93,8 @@ class _MainShellState extends State<MainShell> {
                     ),
                   );
                 }),
+              ),
+            ),
               ),
             ),
           ),
