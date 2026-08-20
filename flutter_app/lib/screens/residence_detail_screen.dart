@@ -67,7 +67,12 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
             return Center(child: Text('Erreur : ${snap.error}'));
           }
           final r = snap.data!;
-          return Stack(
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            builder: (context, value, child) => Opacity(opacity: value, child: child),
+            child: Stack(
             children: [
               CustomScrollView(
                 slivers: [
@@ -83,9 +88,16 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                                   controller: _pageCtrl,
                                   itemCount: r.photos.length,
                                   onPageChanged: (i) => setState(() => _photoIndex = i),
-                                  itemBuilder: (_, i) => CachedNetworkImage(
-                                    imageUrl: r.photos[i], fit: BoxFit.cover, width: double.infinity,
-                                  ),
+                                  itemBuilder: (_, i) => i == 0
+                                      ? Hero(
+                                          tag: 'residence-photo-${r.id}',
+                                          child: CachedNetworkImage(
+                                            imageUrl: r.photos[i], fit: BoxFit.cover, width: double.infinity,
+                                          ),
+                                        )
+                                      : CachedNetworkImage(
+                                          imageUrl: r.photos[i], fit: BoxFit.cover, width: double.infinity,
+                                        ),
                                 ),
                         ),
                         if (r.photos.length > 1)
@@ -232,31 +244,48 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                           const SizedBox(height: 10),
                           SizedBox(
                             height: 180,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
-                              child: FlutterMap(
-                                options: MapOptions(
-                                  initialCenter: LatLng(r.latitude, r.longitude),
-                                  initialZoom: 14,
-                                  interactionOptions: const InteractionOptions(
-                                    flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                                  ),
-                                ),
-                                children: [
-                                  TileLayer(
-                                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                                    subdomains: const ['a', 'b', 'c'],
-                                  ),
-                                  MarkerLayer(markers: [
-                                    Marker(
-                                      point: LatLng(r.latitude, r.longitude),
-                                      width: 34, height: 34,
-                                      child: const ReziLogoBadge(size: 30),
+                            child: (r.latitude == 0 && r.longitude == 0)
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      color: ReziTokens.surface2,
+                                      borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
                                     ),
-                                  ]),
-                                ],
-                              ),
-                            ),
+                                    alignment: Alignment.center,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.location_off_outlined, color: ReziTokens.textMuted),
+                                        const SizedBox(height: 6),
+                                        Text('Position non disponible', style: Theme.of(context).textTheme.bodyMedium),
+                                      ],
+                                    ),
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
+                                    child: FlutterMap(
+                                      options: MapOptions(
+                                        initialCenter: LatLng(r.latitude, r.longitude),
+                                        initialZoom: 14,
+                                        interactionOptions: const InteractionOptions(
+                                          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                                        ),
+                                      ),
+                                      children: [
+                                        TileLayer(
+                                          urlTemplate: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                                          userAgentPackageName: 'com.orange.rezi',
+                                          errorTileCallback: (tile, error, stackTrace) {},
+                                        ),
+                                        MarkerLayer(markers: [
+                                          Marker(
+                                            point: LatLng(r.latitude, r.longitude),
+                                            width: 34, height: 34,
+                                            child: const ReziLogoBadge(size: 30),
+                                          ),
+                                        ]),
+                                      ],
+                                    ),
+                                  ),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -329,6 +358,7 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                           icon: _favori ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                           iconColor: _favori ? ReziTokens.danger : ReziTokens.primary,
                           onTap: () => setState(() => _favori = !_favori),
+                          animateScale: _favori,
                         ),
                       ],
                     ),
@@ -390,6 +420,7 @@ class _ResidenceDetailScreenState extends State<ResidenceDetailScreen> {
                 ),
               ),
             ],
+          ),
           );
         },
       ),
