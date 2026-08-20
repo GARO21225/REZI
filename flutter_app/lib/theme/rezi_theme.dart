@@ -250,7 +250,10 @@ class ReziGhostIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final Color iconColor;
-  const ReziGhostIconButton({super.key, required this.icon, this.onTap, this.iconColor = ReziTokens.text});
+  final bool animateScale;
+  const ReziGhostIconButton({
+    super.key, required this.icon, this.onTap, this.iconColor = ReziTokens.text, this.animateScale = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +266,12 @@ class ReziGhostIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))],
         ),
-        child: Icon(icon, size: 18, color: iconColor),
+        child: AnimatedScale(
+          scale: animateScale ? 1.2 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutBack,
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
       ),
     );
   }
