@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _rechercheOuverte = false;
   double? _lat;
   double? _lng;
+  String _categorieActive = 'Tous';
 
   @override
   void initState() {
@@ -137,7 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      // ── Dropdown de suggestions d'adresse (Photon/Komoot) ──
                       if (_rechercheOuverte)
                         Container(
                           margin: const EdgeInsets.only(top: 6),
@@ -164,62 +164,66 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // ── Bannière promo (façon "cashback" de la référence) ──
+              // ── Bannière promo animée (respiration douce) ──
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: ReziTokens.primaryGradient,
-                      borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Réservez tôt,\néconomisez plus',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                              const SizedBox(height: 4),
-                              Text('Offres limitées ce mois-ci',
-                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
-                          ),
-                          child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 26),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _PulsingBanner(),
                 ),
               ),
-              // ── Section titre + tri ──
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Recommandé pour vous', style: Theme.of(context).textTheme.titleLarge),
-                      Row(
-                        children: [
-                          Text('Par défaut', style: Theme.of(context).textTheme.bodyMedium),
-                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: ReziTokens.textMuted),
-                        ],
+              // ── Onglets catégories avec compteurs, façon référence ──
+              FutureBuilder<List<Residence>>(
+                future: _future,
+                builder: (context, snap) {
+                  final items = snap.data ?? [];
+                  final counts = <String, int>{};
+                  for (final r in items) {
+                    counts[r.type] = (counts[r.type] ?? 0) + 1;
+                  }
+                  final categories = ['Tous', ...counts.keys];
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: categories.map((cat) {
+                            final active = cat == _categorieActive;
+                            final count = cat == 'Tous' ? items.length : counts[cat];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 22),
+                              child: GestureDetector(
+                                onTap: () => setState(() => _categorieActive = cat),
+                                child: AnimatedDefaultTextStyle(
+                                  duration: const Duration(milliseconds: 200),
+                                  style: TextStyle(
+                                    fontSize: active ? 15 : 14,
+                                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                                    color: active ? ReziTokens.text : ReziTokens.textMuted,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('$cat${count != null ? ' $count' : ''}'),
+                                      const SizedBox(height: 4),
+                                      AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        height: 2, width: active ? 22 : 0,
+                                        color: ReziTokens.primary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
-              // ── Liste de résidences ──
+              // ── Grille mosaïque avec entrée en cascade ──
               FutureBuilder<List<Residence>>(
                 future: _future,
                 builder: (context, snap) {
@@ -237,7 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   }
-                  final items = snap.data ?? [];
+                  var items = snap.data ?? [];
+                  if (_categorieActive != 'Tous') {
+                    items = items.where((r) => r.type == _categorieActive).toList();
+                  }
                   if (items.isEmpty) {
                     return SliverToBoxAdapter(
                       child: Padding(
@@ -246,20 +253,50 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   }
+                  // Colonnes gauche/droite en alternance pour l'effet mosaïque
+                  final left = <Residence>[];
+                  final right = <Residence>[];
+                  for (var i = 0; i < items.length; i++) {
+                    (i.isEven ? left : right).add(items[i]);
+                  }
+                  Widget buildColumn(List<Residence> col, int offset) {
+                    return Expanded(
+                      child: Column(
+                        children: List.generate(col.length, (j) {
+                          final globalIndex = j * 2 + offset;
+                          final ratio = j.isEven ? 0.8 : 1.05;
+                          final residence = col[j];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: StaggeredEntrance(
+                              index: globalIndex,
+                              child: ResidenceCard(
+                                residence: residence,
+                                photoAspectRatio: ratio,
+                                isFavori: _favoris.contains(residence.id),
+                                onToggleFavori: (v) => setState(
+                                  () => v ? _favoris.add(residence.id) : _favoris.remove(residence.id),
+                                ),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => ResidenceDetailScreen(id: residence.id)),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    );
+                  }
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
-                    sliver: SliverList.separated(
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, i) => ResidenceCard(
-                        residence: items[i],
-                        isFavori: _favoris.contains(items[i].id),
-                        onToggleFavori: (v) => setState(
-                          () => v ? _favoris.add(items[i].id) : _favoris.remove(items[i].id),
-                        ),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => ResidenceDetailScreen(id: items[i].id)),
-                        ),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildColumn(left, 0),
+                          const SizedBox(width: 14),
+                          buildColumn(right, 1),
+                        ],
                       ),
                     ),
                   );
@@ -268,6 +305,71 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Bannière promo avec une lueur qui respire doucement — micro-animation
+/// continue pour donner un côté vivant à l'accueil.
+class _PulsingBanner extends StatefulWidget {
+  @override
+  State<_PulsingBanner> createState() => _PulsingBannerState();
+}
+
+class _PulsingBannerState extends State<_PulsingBanner> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this, duration: const Duration(seconds: 2),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: ReziTokens.primaryGradient,
+          borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
+          boxShadow: [
+            BoxShadow(
+              color: ReziTokens.primary.withValues(alpha: 0.25 + _ctrl.value * 0.2),
+              blurRadius: 24 + _ctrl.value * 10,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Réservez tôt,\néconomisez plus',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                const SizedBox(height: 4),
+                Text('Offres limitées ce mois-ci',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(ReziTokens.radiusMd),
+            ),
+            child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 26),
+          ),
+        ],
       ),
     );
   }
