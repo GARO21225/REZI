@@ -36,17 +36,20 @@ class ResidenceCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  residence.photos.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: residence.photos.first,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: ReziTokens.surface2),
-                          errorWidget: (_, __, ___) => Container(
-                            color: ReziTokens.surface2,
-                            child: const Icon(Icons.image_not_supported_outlined, color: ReziTokens.textMuted),
-                          ),
-                        )
-                      : Container(color: ReziTokens.surface2),
+                  Hero(
+                    tag: 'residence-photo-${residence.id}',
+                    child: residence.photos.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: residence.photos.first,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => const _ShimmerBox(),
+                            errorWidget: (_, __, ___) => Container(
+                              color: ReziTokens.surface2,
+                              child: const Icon(Icons.image_not_supported_outlined, color: ReziTokens.textMuted),
+                            ),
+                          )
+                        : Container(color: ReziTokens.surface2),
+                  ),
                   // ── Statut ("Active"/"Indisponible") en haut à gauche ──
                   Positioned(
                     top: 10, left: 10,
@@ -88,10 +91,15 @@ class ResidenceCard extends StatelessWidget {
                       ),
                       GestureDetector(
                         onTap: () => onToggleFavori?.call(!isFavori),
-                        child: Icon(
-                          isFavori ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                          size: 20,
-                          color: isFavori ? ReziTokens.primary : ReziTokens.textMuted,
+                        child: AnimatedScale(
+                          scale: isFavori ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            isFavori ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            size: 20,
+                            color: isFavori ? ReziTokens.primary : ReziTokens.textMuted,
+                          ),
                         ),
                       ),
                     ],
@@ -144,6 +152,35 @@ class _MetaTag extends StatelessWidget {
         const SizedBox(width: 3),
         Text(label, style: const TextStyle(fontSize: 11, color: ReziTokens.textMuted, fontWeight: FontWeight.w600)),
       ],
+    );
+  }
+}
+
+/// Effet de chargement animé (pulsation douce), remplace le spinner statique.
+class _ShimmerBox extends StatefulWidget {
+  const _ShimmerBox();
+  @override
+  State<_ShimmerBox> createState() => _ShimmerBoxState();
+}
+
+class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this, duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) => Container(
+        color: Color.lerp(ReziTokens.surface2, ReziTokens.border, _ctrl.value),
+      ),
     );
   }
 }
