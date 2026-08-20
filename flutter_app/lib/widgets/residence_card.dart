@@ -3,11 +3,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/residence.dart';
 import '../theme/rezi_theme.dart';
 
+/// Card éditoriale minimaliste, façon référence : pas de cadre, photo pleine,
+/// pastille note en haut à gauche, titre + sous-titre en dessous.
 class ResidenceCard extends StatelessWidget {
   final Residence residence;
   final VoidCallback onTap;
   final bool isFavori;
   final ValueChanged<bool>? onToggleFavori;
+  final double photoAspectRatio;
 
   const ResidenceCard({
     super.key,
@@ -15,28 +18,29 @@ class ResidenceCard extends StatelessWidget {
     required this.onTap,
     this.isFavori = false,
     this.onToggleFavori,
+    this.photoAspectRatio = 1.0,
   });
+
+  static const _pillColors = [
+    ReziTokens.primary, Color(0xFF7A8B3F), Color(0xFFC98A4B), ReziTokens.primaryLight,
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
-        border: Border.all(color: ReziTokens.border, width: 1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1.5,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Hero(
+    final pillColor = _pillColors[residence.id.hashCode.abs() % _pillColors.length];
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: photoAspectRatio,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
+                  child: Hero(
                     tag: 'residence-photo-${residence.id}',
                     child: residence.photos.isNotEmpty
                         ? CachedNetworkImage(
@@ -50,113 +54,68 @@ class ResidenceCard extends StatelessWidget {
                           )
                         : Container(color: ReziTokens.surface2),
                   ),
-                  // ── Statut ("Active"/"Indisponible") en haut à gauche ──
-                  Positioned(
-                    top: 10, left: 10,
-                    child: ReziStatusPill(
-                      label: residence.disponible ? 'Active' : 'Indisponible',
-                      color: residence.disponible ? ReziTokens.primary : ReziTokens.danger,
+                ),
+                // ── Pastille note, en haut à gauche façon référence ("5.0") ──
+                Positioned(
+                  top: 10, left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(color: pillColor, borderRadius: BorderRadius.circular(ReziTokens.radiusSm)),
+                    child: Text(
+                      residence.note?.toStringAsFixed(1) ?? '—',
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                     ),
                   ),
-                  // ── Prix, pastille sombre en bas à droite de la photo ──
-                  Positioned(
-                    bottom: 10, right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                ),
+                if (!residence.disponible)
+                  Positioned.fill(
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(ReziTokens.radiusSm),
-                      ),
-                      child: Text(
-                        '${residence.prix.toStringAsFixed(0)} FCFA',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        color: Colors.black.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(ReziTokens.radiusLg),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(residence.titre,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium),
-                      ),
-                      GestureDetector(
-                        onTap: () => onToggleFavori?.call(!isFavori),
-                        child: AnimatedScale(
-                          scale: isFavori ? 1.15 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutBack,
-                          child: Icon(
-                            isFavori ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                            size: 20,
-                            color: isFavori ? ReziTokens.primary : ReziTokens.textMuted,
-                          ),
+                // ── Favori discret en haut à droite ──
+                Positioned(
+                  top: 10, right: 10,
+                  child: GestureDetector(
+                    onTap: () => onToggleFavori?.call(!isFavori),
+                    child: AnimatedScale(
+                      scale: isFavori ? 1.15 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutBack,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.35), shape: BoxShape.circle),
+                        child: Icon(
+                          isFavori ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          size: 14,
+                          color: isFavori ? ReziTokens.accent : Colors.white,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 12, color: ReziTokens.accent),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(residence.adresse ?? residence.type,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _MetaTag(icon: Icons.home_work_outlined, label: residence.type),
-                      if (residence.note != null) ...[
-                        const SizedBox(width: 8),
-                        _MetaTag(icon: Icons.star_rounded, label: residence.note!.toStringAsFixed(1),
-                            iconColor: ReziTokens.accent),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Text(residence.titre,
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Text(
+            residence.description?.isNotEmpty == true ? residence.description! : residence.type,
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }
 }
 
-class _MetaTag extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color iconColor;
-  const _MetaTag({required this.icon, required this.label, this.iconColor = ReziTokens.textMuted});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: iconColor),
-        const SizedBox(width: 3),
-        Text(label, style: const TextStyle(fontSize: 11, color: ReziTokens.textMuted, fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
-}
-
-/// Effet de chargement animé (pulsation douce), remplace le spinner statique.
 class _ShimmerBox extends StatefulWidget {
   const _ShimmerBox();
   @override
@@ -180,6 +139,44 @@ class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderState
       animation: _ctrl,
       builder: (context, child) => Container(
         color: Color.lerp(ReziTokens.surface2, ReziTokens.border, _ctrl.value),
+      ),
+    );
+  }
+}
+
+/// Fait apparaître son enfant en fondu + léger glissement, avec un délai
+/// proportionnel à [index] — donne l'effet d'entrée "en cascade" à une grille.
+class StaggeredEntrance extends StatefulWidget {
+  final int index;
+  final Widget child;
+  const StaggeredEntrance({super.key, required this.index, required this.child});
+
+  @override
+  State<StaggeredEntrance> createState() => _StaggeredEntranceState();
+}
+
+class _StaggeredEntranceState extends State<StaggeredEntrance> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 60 * (widget.index % 10)), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _visible ? 1 : 0,
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.08),
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
       ),
     );
   }
