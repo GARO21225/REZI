@@ -39,6 +39,26 @@ class ReziTokens {
   static Color disponibleBadgeColor(bool disponible) => disponible ? primary : danger;
 }
 
+/// Transition de page fluide (fondu + léger zoom), remplace le slide
+/// par défaut de Material pour un rendu plus premium.
+Route<T> reziPageRoute<T>(Widget page) {
+  return PageRouteBuilder<T>(
+    transitionDuration: const Duration(milliseconds: 380),
+    reverseTransitionDuration: const Duration(milliseconds: 320),
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween(begin: 0.97, end: 1.0).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 class ReziTheme {
   ReziTheme._();
 
