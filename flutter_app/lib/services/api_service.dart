@@ -60,13 +60,32 @@ class ApiService {
   }
 
   Future<String> login(String email, String password) async {
+    // Le backend attend un formulaire OAuth2 standard (champ "username", pas "email").
     final res = await http.post(
       Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'username': email, 'password': password},
     );
     if (res.statusCode != 200) {
       throw Exception('Identifiants invalides');
+    }
+    final data = jsonDecode(res.body);
+    final token = data['access_token'] as String;
+    await _storage.write(key: 'jwt_token', value: token);
+    return token;
+  }
+
+  /// Connexion/inscription automatique via Google ou Apple : échange le
+  /// jeton d'ID Firebase contre notre propre JWT.
+  Future<String> socialLogin(String firebaseIdToken) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/social-login'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'id_token': firebaseIdToken},
+    );
+    if (res.statusCode != 200) {
+      final data = jsonDecode(res.body);
+      throw Exception(data['detail'] ?? 'Connexion sociale échouée');
     }
     final data = jsonDecode(res.body);
     final token = data['access_token'] as String;
