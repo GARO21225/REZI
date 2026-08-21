@@ -170,6 +170,47 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     token = create_token({"sub": str(user.id), "role": user.role})
     return {"access_token": token, "token_type": "bearer", "user": user_to_dict(user)}
 
+# ── Connexion / inscription automatique via Google ou Apple ──
+# Le client Flutter s'authentifie d'abord auprès de Firebase Auth (Google/Apple),
+# puis envoie ici le jeton d'ID Firebase obtenu. On le vérifie côté serveur avec
+# le même firebase-admin déjà utilisé pour les notifications push, on retrouve
+# ou on crée le compte, et on renvoie notre propre JWT (comportement identique
+# à /login pour le reste de l'app).
+@router.post("/social-login")
+async def social_login(id_token: str = Form(...), db: Session = Depends(get_db)):
+    try:
+        from firebase_admin import auth as firebase_auth
+        decoded = firebase_auth.verify_id_token(id_token)
+    except Exception:
+        raise HTTPException(401, "Jeton d'authentification invalide ou expiré")
+
+    email = decoded.get("email")
+    if not email:
+        raise HTTPException(400, "Aucun email associé à ce compte")
+
+    nom_complet = (decoded.get("name") or "").strip()
+    parties = nom_complet.split(" ", 1) if nom_complet else []
+    prenom = parties[0] if parties else "Utilisateur"
+    nom = parties[1] if len(parties) > 1 else "REZI"
+
+    user = db.query(User).filter(User.email == email.lower()).first()
+    if not user:
+        user = User(
+            email=email.lower(),
+            nom=nom,
+            prenom=prenom,
+            hashed_password=hash_password(str(uuid.uuid4())),  # mot de passe aléatoire, jamais utilisé
+            is_verified=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    if not user.is_active:
+        raise HTTPException(403, "Compte désactivé")
+
+    token = create_token({"sub": str(user.id), "role": user.role})
+    return {"access_token": token, "token_type": "bearer", "user": user_to_dict(user)}
+
 @router.get("/me")
 async def me(current_user=Depends(get_current_active_user)):
     return user_to_dict(current_user)
